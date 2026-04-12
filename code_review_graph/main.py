@@ -7,8 +7,15 @@ Communicates via stdio (standard MCP transport).
 from __future__ import annotations
 
 import asyncio
+import atexit
+import logging
+import os
+import signal
 import sys
+from pathlib import Path
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from fastmcp import FastMCP
 
@@ -49,6 +56,114 @@ from .tools import (
 # NOTE: Thread-safe for stdio MCP (single-threaded). If adding HTTP/SSE
 # transport with concurrent requests, replace with contextvars.ContextVar.
 _default_repo_root: str | None = None
+
+# Path of the PID lock file written by this process; cleared on exit.
+_pid_lock_path: Path | None = None
+
+
+# ---------------------------------------------------------------------------
+# Single-instance guard
+# ---------------------------------------------------------------------------
+
+def _is_pid_alive(pid: int) -> bool:
+    """Return True if *pid* names a live process (cross-platform)."""
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        # Process exists but we can't signal it — still alive.
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _acquire_serve_lock(repo_root: str | None, *, force: bool = False) -> Path | None:
+    """Write a PID lock file so only one ``serve`` runs per repo.
+
+    Returns the lock ``Path`` on success.  Returns ``None`` when the data
+    directory cannot be resolved (e.g. outside any git repo).
+
+    If a *live* instance already holds the lock this function prints a
+    diagnostic to stderr and calls ``sys.exit(0)`` — the MCP host sees a
+    clean exit rather than a duplicate server sitting idle forever.
+
+    A stale lock (process no longer alive) is silently overwritten.
+    Pass ``force=True`` to skip the live-instance check (e.g. after a
+    forceful kill where the PID file was not cleaned up).
+    """
+    from .incremental import find_project_root, get_data_dir
+
+    root = Path(repo_root).resolve() if repo_root else find_project_root()
+    if root is None:
+        return None
+
+    data_dir = get_data_dir(root)
+    lock_path = data_dir / "serve.pid"
+
+    if not force and lock_path.exists():
+        try:
+            existing_pid = int(lock_path.read_text(encoding="utf-8").strip())
+        except (ValueError, OSError):
+            existing_pid = None
+
+        if existing_pid and existing_pid != os.getpid() and _is_pid_alive(existing_pid):
+            print(
+                f"[code-review-graph] Server already running for '{root}' "
+                f"(PID {existing_pid}). Exiting to avoid duplicate instance.\n"
+                "  Kill it with:  taskkill /F /PID "
+                f"{existing_pid}  (Windows)\n"
+                "  or:            kill "
+                f"{existing_pid}  (Unix)\n"
+                "  Override with: code-review-graph serve --force",
+                file=sys.stderr,
+            )
+            sys.exit(0)
+
+    try:
+        lock_path.write_text(str(os.getpid()), encoding="utf-8")
+    except OSError as exc:
+        logger.warning("Could not write PID lock at %s: %s", lock_path, exc)
+        return None
+
+    return lock_path
+
+
+def _release_serve_lock() -> None:
+    """Remove the PID lock file — registered as an atexit handler."""
+    global _pid_lock_path
+    path = _pid_lock_path
+    _pid_lock_path = None
+    if path is not None:
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def _install_signal_handlers() -> None:
+    """Register SIGTERM/SIGINT handlers to clean up the PID lock on exit.
+
+    Only installs when called from the main thread (signal handlers cannot
+    be set from non-main threads).  Falls back silently on platforms that
+    don't support a given signal (e.g. SIGTERM on bare Windows).
+    """
+    import threading
+    if threading.current_thread() is not threading.main_thread():
+        return
+
+    def _handler(signum: int, frame: object) -> None:  # noqa: ARG001
+        _release_serve_lock()
+        sys.exit(0)
+
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            signal.signal(sig, _handler)
+        except (OSError, ValueError):
+            pass  # signal not supported on this platform / thread
+
+
 
 
 def _resolve_repo_root(repo_root: Optional[str]) -> Optional[str]:
@@ -757,7 +872,7 @@ def pre_merge_check(base: str = "HEAD~1") -> list[dict]:
     return pre_merge_check_prompt(base=base)
 
 
-def main(repo_root: str | None = None) -> None:
+def main(repo_root: str | None = None, *, force: bool = False) -> None:
     """Run the MCP server via stdio.
 
     On Windows, Python 3.8+ defaults to ``ProactorEventLoop``, which
@@ -767,13 +882,33 @@ def main(repo_root: str | None = None) -> None:
     ``embed_graph_tool``. Switching to ``WindowsSelectorEventLoopPolicy``
     before fastmcp starts its loop avoids the deadlock.
     See: #46, #136
+
+    A PID lock file written to ``<data_dir>/serve.pid`` prevents multiple
+    instances accumulating for the same repository.  Stale locks (process
+    no longer alive) are overwritten automatically.  The lock is removed
+    via an atexit handler and SIGTERM/SIGINT signal handlers so it is
+    cleaned up on both clean exits and external kills.
+
+    The FastMCP startup banner is suppressed (``show_banner=False``) because
+    it makes a blocking network call to PyPI to check for updates, adding
+    ~5-7 s to the MCP ``initialize`` round-trip and flooding the VS Code
+    MCP log with dozens of stderr warning lines for every workspace open.
+
+    Args:
+        repo_root: Repository root path.  Auto-detected from cwd if omitted.
+        force: Skip the live-instance check and overwrite any existing PID lock.
     """
-    global _default_repo_root
+    global _default_repo_root, _pid_lock_path
     _default_repo_root = repo_root
+
+    # Acquire single-instance lock before the event loop starts.
+    _pid_lock_path = _acquire_serve_lock(repo_root, force=force)
+    atexit.register(_release_serve_lock)
+    _install_signal_handlers()
+
     if sys.platform == "win32":
-        import asyncio
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    mcp.run(transport="stdio")
+    mcp.run(transport="stdio", show_banner=False)
 
 
 if __name__ == "__main__":

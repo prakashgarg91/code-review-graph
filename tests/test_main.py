@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import os
 
 import pytest
 
@@ -108,3 +109,51 @@ class TestLongRunningToolsAreAsync:
                 f"blocking work; otherwise Windows MCP clients will hang. "
                 f"See #46, #136."
             )
+
+
+class TestServePidLock:
+    """PID lock prevents duplicate ``code-review-graph serve`` instances."""
+
+    def test_lock_file_written_and_contains_pid(self, tmp_path):
+        (tmp_path / ".git").mkdir()
+        lock_path = crg_main._acquire_serve_lock(str(tmp_path))
+        assert lock_path is not None
+        assert lock_path.exists()
+        assert int(lock_path.read_text()) == os.getpid()
+        lock_path.unlink()
+
+    def test_stale_lock_overwritten(self, tmp_path):
+        (tmp_path / ".git").mkdir()
+        data_dir = tmp_path / ".code-review-graph"
+        data_dir.mkdir()
+        stale = data_dir / "serve.pid"
+        # Write a PID that can never be alive (PID 0 is the kernel on
+        # all platforms; os.kill(0, 0) has special semantics so we use
+        # a large, almost certainly unused PID instead).
+        stale.write_text("999999999")
+        lock_path = crg_main._acquire_serve_lock(str(tmp_path))
+        assert lock_path is not None
+        assert int(lock_path.read_text()) == os.getpid()
+        lock_path.unlink()
+
+    def test_force_flag_skips_live_check(self, tmp_path, monkeypatch):
+        (tmp_path / ".git").mkdir()
+        data_dir = tmp_path / ".code-review-graph"
+        data_dir.mkdir()
+        lock = data_dir / "serve.pid"
+        # Pretend another PID is alive by monkey-patching the helper.
+        monkeypatch.setattr(crg_main, "_is_pid_alive", lambda _pid: True)
+        lock.write_text("12345")
+        lock_path = crg_main._acquire_serve_lock(str(tmp_path), force=True)
+        assert lock_path is not None
+        assert int(lock_path.read_text()) == os.getpid()
+        lock_path.unlink()
+
+    def test_release_removes_lock(self, tmp_path, monkeypatch):
+        (tmp_path / ".git").mkdir()
+        lock_path = crg_main._acquire_serve_lock(str(tmp_path))
+        assert lock_path is not None and lock_path.exists()
+        monkeypatch.setattr(crg_main, "_pid_lock_path", lock_path)
+        crg_main._release_serve_lock()
+        assert not lock_path.exists()
+        assert crg_main._pid_lock_path is None
