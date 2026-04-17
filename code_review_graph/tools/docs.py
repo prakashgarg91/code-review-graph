@@ -29,9 +29,10 @@ def embed_graph(
 
     Args:
         repo_root: Repository root path. Auto-detected if omitted.
-        model: Embedding model name (HuggingFace ID or local path).
-               Falls back to CRG_EMBEDDING_MODEL env var, then
-               all-MiniLM-L6-v2.
+        model: Embedding model name (HuggingFace ID, Ollama tag, or local path).
+               Falls back to CRG_EMBEDDING_MODEL env var, then prefers
+               nomic-embed-text-v2-moe:latest via Ollama when available,
+               otherwise all-MiniLM-L6-v2.
 
     Returns:
         Number of nodes embedded and total embedding count.
@@ -236,3 +237,5 @@ def get_wiki_page_func(
         ),
         "content": content,
     }
+
+

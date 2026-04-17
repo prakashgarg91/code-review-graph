@@ -1,8 +1,17 @@
 {
   "mcpServers": {
     "code-review-graph": {
-      "command": "uvx",
-      "args": ["code-review-graph", "serve"]
+      "command": "C:/Users/Prakash/.venvs/code-review-graph/Scripts/python.exe",
+      "args": [
+        "-m",
+        "code_review_graph",
+        "serve"
+      ],
+      "env": {
+        "CRG_EMBEDDING_PROVIDER": "ollama",
+        "CRG_EMBEDDING_MODEL": "nomic-embed-text-v2-moe:latest",
+        "CRG_DISABLE_IGRAPH_COMMUNITIES": "1"
+      }
     }
   }
 }

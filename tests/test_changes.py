@@ -15,7 +15,6 @@ from code_review_graph.flows import store_flows, trace_flows
 from code_review_graph.graph import GraphStore
 from code_review_graph.parser import EdgeInfo, NodeInfo
 
-
 class TestChanges:
     def setup_method(self):
         self.tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
@@ -23,6 +22,7 @@ class TestChanges:
 
     def teardown_method(self):
         self.store.close()
+        self.tmp.close()
         Path(self.tmp.name).unlink(missing_ok=True)
 
     # -- helpers --
@@ -473,3 +473,22 @@ class TestChanges:
             assert "risk_score" in result
             assert "test_gaps" in result
             assert "review_priorities" in result
+
+    def test_detect_changes_tool_skips_git_diff_when_changed_files_explicit(self):
+        """Explicit changed_files should bypass git diff range parsing."""
+        from code_review_graph.tools import detect_changes_func
+
+        self._add_func("my_func", path="/fake/repo/app.py", line_start=1, line_end=10)
+
+        with (
+            patch("code_review_graph.tools.review._get_store") as mock_get_store,
+            patch("code_review_graph.tools.review.parse_git_diff_ranges") as mock_parse,
+        ):
+            mock_get_store.return_value = (self.store, Path("/fake/repo"))
+            result = detect_changes_func(
+                repo_root="/fake/repo",
+                changed_files=["app.py"],
+            )
+
+            assert result["status"] == "ok"
+            mock_parse.assert_not_called()

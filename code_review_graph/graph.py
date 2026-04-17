@@ -167,7 +167,18 @@ class GraphStore:
             self._nxg_cache = None
 
     def close(self) -> None:
-        self._conn.close()
+        conn = getattr(self, "_conn", None)
+        if conn is None:
+            return
+        try:
+            conn.execute("PRAGMA wal_checkpoint(PASSIVE)")
+        except (sqlite3.OperationalError, sqlite3.ProgrammingError):
+            pass
+        try:
+            conn.close()
+        except sqlite3.ProgrammingError:
+            pass
+        self._conn = None
 
     # --- Write operations ---
 

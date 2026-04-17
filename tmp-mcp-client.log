@@ -1,0 +1,6 @@
+[04/16/26 13:56:06] INFO     Starting MCP server                 server.py:2506
+                             'code-review-graph' with transport                
+                             'stdio'                                           
+2026-04-16 13:56:06,434 INFO code_review_graph.main mcp_tool.start name=get_minimal_context_tool repo_root=D:/Github/Truck_Opti, base=HEAD~1, task=review route handlers and API surface
+2026-04-16 13:56:06,434 INFO code_review_graph.tools.context get_minimal_context.open_db repo_root=D:\Github\Truck_Opti duration_ms=0
+2026-04-16 13:56:06,437 INFO code_review_graph.tools.context get_minimal_context.stats repo_root=D:\Github\Truck_Opti duration_ms=2 total_nodes=3964 total_edges=32925 files=320

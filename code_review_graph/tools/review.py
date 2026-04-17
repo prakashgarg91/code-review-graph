@@ -379,6 +379,7 @@ def detect_changes_func(
         test gaps, and review priorities.
     """
     store, root = _get_store(repo_root)
+    explicit_changed_files = changed_files is not None
     try:
         # Detect changed files if not provided.
         if changed_files is None:
@@ -401,7 +402,7 @@ def detect_changes_func(
         abs_files = [str(root / f) for f in changed_files]
 
         # Parse diff ranges for line-level mapping.
-        diff_ranges = parse_git_diff_ranges(str(root), base)
+        diff_ranges = {} if explicit_changed_files else parse_git_diff_ranges(str(root), base)
         # Remap to absolute paths so they match graph file_paths.
         abs_ranges: dict[str, list[tuple[int, int]]] = {}
         for rel_path, ranges in diff_ranges.items():

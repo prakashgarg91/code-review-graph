@@ -7,6 +7,7 @@ optional) with a file-based grouping fallback when igraph is not installed.
 from __future__ import annotations
 
 import logging
+import os
 import re
 from collections import Counter, defaultdict
 from typing import Any
@@ -48,6 +49,11 @@ _COMMON_WORDS = frozenset({
     "the", "and", "test", "main", "run", "do", "is", "has", "on",
     "of", "in", "at", "by", "my", "this", "that", "all", "none",
 })
+
+
+def _force_file_based_communities() -> bool:
+    value = os.environ.get("CRG_DISABLE_IGRAPH_COMMUNITIES", "")
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 # ---------------------------------------------------------------------------
@@ -590,17 +596,22 @@ def detect_communities(
         len(unique_nodes), len(all_edges),
     )
 
-    if IGRAPH_AVAILABLE:
+    if IGRAPH_AVAILABLE and not _force_file_based_communities():
         logger.info("Detecting communities with Leiden algorithm (igraph)")
         results = _detect_leiden(unique_nodes, all_edges, min_size, adj=adj)
     else:
-        logger.info("igraph not available, using file-based community detection")
+        if IGRAPH_AVAILABLE:
+            logger.info("igraph disabled via CRG_DISABLE_IGRAPH_COMMUNITIES, using file-based community detection")
+        else:
+            logger.info("igraph not available, using file-based community detection")
         results = _detect_file_based(unique_nodes, all_edges, min_size, adj=adj)
 
-    # Split oversized communities
-    results = _split_oversized(
-        results, unique_nodes, all_edges,
-    )
+    # Forced file-based mode is used to keep MCP stdio post-processing under
+    # the Windows timeout ceiling. Skip igraph-based sub-splitting there.
+    if not _force_file_based_communities():
+        results = _split_oversized(
+            results, unique_nodes, all_edges,
+        )
 
     # Convert member_qns (internal set) to a list for serialization safety,
     # then strip it from the returned dicts to avoid leaking internal state.

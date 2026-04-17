@@ -2,20 +2,26 @@
 
 Supports multiple providers:
 1. Local (sentence-transformers) - Private, fast, offline.
-2. Google Gemini - High-quality, cloud-based. Requires explicit opt-in.
-3. MiniMax (embo-01) - High-quality 1536-dim cloud embeddings. Requires MINIMAX_API_KEY.
+2. Ollama - Private, local HTTP embeddings for tagged models like nomic-embed-text-v2-moe.
+3. Google Gemini - High-quality, cloud-based. Requires explicit opt-in.
+4. MiniMax (embo-01) - High-quality 1536-dim cloud embeddings. Requires MINIMAX_API_KEY.
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
+import importlib.util
 import logging
 import os
 import sqlite3
 import struct
 import sys
 import time
+import urllib.error
+import urllib.request
 from abc import ABC, abstractmethod
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -50,10 +56,17 @@ class EmbeddingProvider(ABC):
 
 
 LOCAL_DEFAULT_MODEL = "all-MiniLM-L6-v2"
+OLLAMA_DEFAULT_MODEL = "nomic-embed-text-v2-moe:latest"
+OLLAMA_DEFAULT_URL = "http://localhost:11434"
 
 
 class LocalEmbeddingProvider(EmbeddingProvider):
     def __init__(self, model_name: str | None = None) -> None:
+        if not _check_available():
+            raise ImportError(
+                "sentence-transformers not installed. "
+                "Run: pip install code-review-graph[embeddings]"
+            )
         self._model_name = model_name or os.environ.get(
             "CRG_EMBEDDING_MODEL", LOCAL_DEFAULT_MODEL
         )
@@ -91,6 +104,73 @@ class LocalEmbeddingProvider(EmbeddingProvider):
     @property
     def name(self) -> str:
         return f"local:{self._model_name}"
+
+
+class OllamaEmbeddingProvider(EmbeddingProvider):
+    def __init__(
+        self,
+        model_name: str | None = None,
+        base_url: str | None = None,
+    ) -> None:
+        self._model_name = model_name or os.environ.get(
+            "CRG_EMBEDDING_MODEL", OLLAMA_DEFAULT_MODEL
+        )
+        self._base_url = (
+            base_url
+            or os.environ.get("CRG_OLLAMA_URL")
+            or os.environ.get("OLLAMA_HOST")
+            or OLLAMA_DEFAULT_URL
+        ).rstrip("/")
+        dim_env = os.environ.get("CRG_OLLAMA_EMBEDDING_DIMENSIONS", "").strip()
+        self._dimension = int(dim_env) if dim_env else None
+        self._keep_alive = os.environ.get("CRG_OLLAMA_KEEP_ALIVE", "10m")
+
+    def _call_api(self, texts: list[str], prefix: str) -> list[list[float]]:
+        if not texts:
+            return []
+
+        payload: dict[str, Any] = {
+            "model": self._model_name,
+            "input": [f"{prefix}{text}" for text in texts],
+            "truncate": True,
+        }
+        if self._dimension is not None:
+            payload["dimensions"] = self._dimension
+        if self._keep_alive:
+            payload["keep_alive"] = self._keep_alive
+
+        req = urllib.request.Request(
+            f"{self._base_url}/api/embed",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:  # nosec B310
+                body = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.URLError as exc:
+            raise RuntimeError(
+                f"Unable to reach Ollama at {self._base_url}: {exc}"
+            ) from exc
+
+        embeddings = body.get("embeddings", [])
+        if embeddings and self._dimension is None:
+            self._dimension = len(embeddings[0])
+        return embeddings
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        return self._call_api(texts, "search_document: ")
+
+    def embed_query(self, text: str) -> list[float]:
+        return self._call_api([text], "search_query: ")[0]
+
+    @property
+    def dimension(self) -> int:
+        return self._dimension or 768
+
+    @property
+    def name(self) -> str:
+        return f"ollama:{self._model_name}"
+
 
 
 class GoogleEmbeddingProvider(EmbeddingProvider):
@@ -276,23 +356,82 @@ def _warn_cloud_egress(provider_name: str) -> None:
     )
 
 
+def _get_ollama_base_url() -> str:
+    return (
+        os.environ.get("CRG_OLLAMA_URL")
+        or os.environ.get("OLLAMA_HOST")
+        or OLLAMA_DEFAULT_URL
+    ).rstrip("/")
+
+
+@lru_cache(maxsize=8)
+def _ollama_list_models(base_url: str) -> tuple[str, ...]:
+    req = urllib.request.Request(f"{base_url}/api/tags")
+    try:
+        with urllib.request.urlopen(req, timeout=2) as resp:  # nosec B310
+            body = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return ()
+
+    models: list[str] = []
+    for model in body.get("models", []):
+        name = model.get("name") or model.get("model")
+        if name:
+            models.append(name)
+    return tuple(models)
+
+
+def _ollama_model_available(model_name: str) -> bool:
+    return model_name in _ollama_list_models(_get_ollama_base_url())
+
+
+def _resolve_provider_and_model(
+    provider: str | None,
+    model: str | None,
+) -> tuple[str, str | None]:
+    resolved_provider = provider or os.environ.get("CRG_EMBEDDING_PROVIDER")
+    resolved_model = model or os.environ.get("CRG_EMBEDDING_MODEL")
+
+    if resolved_provider:
+        return resolved_provider, resolved_model
+
+    if resolved_model:
+        if _ollama_model_available(resolved_model):
+            return "ollama", resolved_model
+        return "local", resolved_model
+
+    if _ollama_model_available(OLLAMA_DEFAULT_MODEL):
+        return "ollama", OLLAMA_DEFAULT_MODEL
+
+    return "local", None
+
+
 def get_provider(
     provider: str | None = None,
     model: str | None = None,
+    allow_cold_load: bool = True,
 ) -> EmbeddingProvider | None:
     """Get an embedding provider by name.
 
     Args:
-        provider: Provider name. One of "local", "google", "minimax", or None for local.
+        provider: Provider name. One of "local", "ollama", "google", "minimax",
+                  or None for automatic selection.
                   Google requires GOOGLE_API_KEY env var and explicit opt-in.
                   MiniMax requires MINIMAX_API_KEY env var and explicit opt-in.
                   Cloud providers emit a one-time stderr warning before use
                   unless ``CRG_ACCEPT_CLOUD_EMBEDDINGS=1`` is set. See: #174
         model: Model name/path to use. For local provider this is any
                sentence-transformers compatible model. Falls back to
-               CRG_EMBEDDING_MODEL env var, then to all-MiniLM-L6-v2.
+               CRG_EMBEDDING_MODEL env var, then prefers
+               nomic-embed-text-v2-moe:latest via Ollama when available,
+               otherwise all-MiniLM-L6-v2.
                For Google provider this is a Gemini model ID.
+        allow_cold_load: When False, do not initialize the sentence-transformers
+                         local provider. Query-time search uses this to avoid
+                         expensive local model loads on a cold server process.
     """
+    provider, model = _resolve_provider_and_model(provider, model)
+
     if provider == "minimax":
         api_key = os.environ.get("MINIMAX_API_KEY")
         if not api_key:
@@ -319,20 +458,22 @@ def get_provider(
         except ImportError:
             return None
 
-    # Default: local
+    if provider == "ollama":
+        return OllamaEmbeddingProvider(model_name=model)
+
+    if not allow_cold_load:
+        return None
+
     try:
         return LocalEmbeddingProvider(model_name=model)
     except ImportError:
         return None
 
 
+@lru_cache(maxsize=1)
 def _check_available() -> bool:
     """Check whether local embedding support is available."""
-    try:
-        import sentence_transformers  # noqa: F401
-        return True
-    except ImportError:
-        return False
+    return importlib.util.find_spec("sentence_transformers") is not None
 
 
 # ---------------------------------------------------------------------------
@@ -396,8 +537,13 @@ class EmbeddingStore:
         db_path: str | Path,
         provider: str | None = None,
         model: str | None = None,
+        allow_cold_load: bool = True,
     ) -> None:
-        self.provider = get_provider(provider, model=model)
+        self.provider = get_provider(
+            provider,
+            model=model,
+            allow_cold_load=allow_cold_load,
+        )
         self.available = self.provider is not None
         self.db_path = Path(db_path)
         self._conn = sqlite3.connect(
@@ -536,3 +682,12 @@ def semantic_search(
     # Fallback to keyword search
     nodes = graph_store.search_nodes(query, limit=limit)
     return [node_to_dict(n) for n in nodes]
+
+
+
+
+
+
+
+
+

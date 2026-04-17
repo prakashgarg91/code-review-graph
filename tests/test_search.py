@@ -2,10 +2,12 @@
 
 import tempfile
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from code_review_graph.graph import GraphStore
 from code_review_graph.parser import NodeInfo
 from code_review_graph.search import (
+    _embedding_search,
     detect_query_kind_boost,
     hybrid_search,
     rebuild_fts_index,
@@ -16,11 +18,13 @@ from code_review_graph.search import (
 class TestHybridSearch:
     def setup_method(self):
         self.tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        self.tmp.close()
         self.store = GraphStore(self.tmp.name)
         self._seed_data()
 
     def teardown_method(self):
         self.store.close()
+        self.tmp.close()
         Path(self.tmp.name).unlink(missing_ok=True)
 
     def _seed_data(self):
@@ -52,15 +56,12 @@ class TestHybridSearch:
         ]
         for node in nodes:
             node_id = self.store.upsert_node(node, file_hash="abc123")
-            # Set signature for functions
             if node.kind == "Function":
                 sig = f"def {node.name}{node.params or '()'} -> {node.return_type or 'None'}"
                 self.store._conn.execute(
                     "UPDATE nodes SET signature = ? WHERE id = ?", (sig, node_id)
                 )
         self.store._conn.commit()
-
-    # --- rebuild_fts_index ---
 
     def test_rebuild_fts_index(self):
         """rebuild_fts_index returns the correct count of indexed rows."""
@@ -73,8 +74,6 @@ class TestHybridSearch:
         count2 = rebuild_fts_index(self.store)
         assert count1 == count2
 
-    # --- FTS search by name ---
-
     def test_fts_search_by_name(self):
         """FTS search finds a node by its name."""
         rebuild_fts_index(self.store)
@@ -83,18 +82,13 @@ class TestHybridSearch:
         names = [r["name"] for r in results]
         assert "get_users" in names
 
-    # --- FTS search by signature ---
-
     def test_fts_search_by_signature(self):
         """FTS search finds a node by content in its signature."""
         rebuild_fts_index(self.store)
         results = hybrid_search(self.store, "Session")
         assert len(results) > 0
-        # get_users has "Session" in its signature
         names = [r["name"] for r in results]
         assert "get_users" in names
-
-    # --- Kind boosting ---
 
     def test_kind_boost_pascal_case(self):
         """PascalCase query boosts Class kind > 1.0."""
@@ -123,10 +117,7 @@ class TestHybridSearch:
         """ALL_CAPS should not trigger PascalCase boost."""
         boosts = detect_query_kind_boost("HTTP_STATUS")
         assert "Class" not in boosts
-        # But should trigger snake_case boost
         assert "Function" in boosts
-
-    # --- RRF merge ---
 
     def test_rrf_merge(self):
         """Node appearing in both lists ranks highest after RRF merge."""
@@ -136,12 +127,8 @@ class TestHybridSearch:
         merged = rrf_merge(list_a, list_b)
         ids = [item_id for item_id, _ in merged]
 
-        # Items 1 and 2 appear in both lists, so they should be top-ranked
         assert ids[0] in (1, 2)
         assert ids[1] in (1, 2)
-        # ID 2 is rank 0+0 in list_b and rank 1 in list_a
-        # ID 1 is rank 0 in list_a and rank 2 in list_b
-        # So ID 2 should rank higher: 1/(60+1+1) + 1/(60+0+1) vs 1/(60+0+1) + 1/(60+2+1)
         assert ids[0] == 2
 
     def test_rrf_merge_single_list(self):
@@ -156,11 +143,8 @@ class TestHybridSearch:
         merged = rrf_merge([], [])
         assert merged == []
 
-    # --- Fallback to keyword search ---
-
     def test_fallback_to_keyword(self):
         """Works without FTS index by falling back to keyword LIKE matching."""
-        # Do NOT rebuild FTS index — drop it if it exists
         try:
             self.store._conn.execute("DROP TABLE IF EXISTS nodes_fts")
             self.store._conn.commit()
@@ -172,8 +156,6 @@ class TestHybridSearch:
         names = [r["name"] for r in results]
         assert "authenticate" in names
 
-    # --- Empty query ---
-
     def test_empty_query_handled(self):
         """Empty query returns empty results without crashing."""
         results = hybrid_search(self.store, "")
@@ -183,8 +165,6 @@ class TestHybridSearch:
         """Whitespace-only query returns empty results."""
         results = hybrid_search(self.store, "   ")
         assert results == []
-
-    # --- Return fields ---
 
     def test_hybrid_search_returns_expected_fields(self):
         """All expected fields are present in search results."""
@@ -202,35 +182,23 @@ class TestHybridSearch:
                 f"Missing fields: {expected_fields - result.keys()}"
             )
 
-    # --- Kind filtering ---
-
     def test_kind_filter(self):
         """Kind parameter filters results to only that kind."""
         rebuild_fts_index(self.store)
         results = hybrid_search(self.store, "User", kind="Class")
-        for r in results:
-            assert r["kind"] == "Class"
-
-    # --- Context file boosting ---
+        for result in results:
+            assert result["kind"] == "Class"
 
     def test_context_file_boost(self):
         """Nodes in context_files get boosted above others."""
         rebuild_fts_index(self.store)
+        results_with_ctx = hybrid_search(self.store, "user", context_files=["api.py"])
 
-        # Search for "user" which matches multiple nodes
-        results_with_ctx = hybrid_search(
-            self.store, "user", context_files=["api.py"]
-        )
-
-        # Find get_users in both result sets
         if results_with_ctx:
             api_nodes = [r for r in results_with_ctx if r["file_path"] == "api.py"]
             if api_nodes:
-                # api.py nodes should have a score boost
                 api_score = api_nodes[0]["score"]
                 assert api_score > 0
-
-    # --- Limit parameter ---
 
     def test_limit_respected(self):
         """Search respects the limit parameter."""
@@ -238,13 +206,25 @@ class TestHybridSearch:
         results = hybrid_search(self.store, "user", limit=2)
         assert len(results) <= 2
 
-    # --- FTS5 injection safety ---
+    def test_embedding_search_uses_warm_only_provider(self):
+        """Query-time embedding search should not cold-load the local model."""
+        fake_store = MagicMock()
+        fake_store.db_path = self.tmp.name
+
+        fake_emb_store = MagicMock()
+        fake_emb_store.available = True
+        fake_emb_store.count.return_value = 0
+
+        with patch("code_review_graph.embeddings.EmbeddingStore", return_value=fake_emb_store) as mock_store_cls:
+            results = _embedding_search(fake_store, "user", limit=5)
+
+        assert results == []
+        mock_store_cls.assert_called_once_with(self.tmp.name, model=None, allow_cold_load=False)
+        fake_emb_store.close.assert_called_once()
 
     def test_fts_query_with_special_chars(self):
         """FTS5 special characters are safely handled."""
         rebuild_fts_index(self.store)
-        # These should not crash — FTS5 operators like AND, OR, NOT, *, etc.
         for dangerous_query in ['OR user', 'NOT thing', 'user*', '"user"', 'a AND b']:
             results = hybrid_search(self.store, dangerous_query)
-            # Just assert no exception was raised
             assert isinstance(results, list)

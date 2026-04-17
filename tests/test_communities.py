@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+import code_review_graph.communities as communities_module
+
 from code_review_graph.communities import (
     IGRAPH_AVAILABLE,
     _compute_cohesion,
@@ -24,6 +26,7 @@ from code_review_graph.parser import EdgeInfo, NodeInfo
 class TestCommunities:
     def setup_method(self):
         self.tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        self.tmp.close()
         self.store = GraphStore(self.tmp.name)
 
     def teardown_method(self):
@@ -225,6 +228,28 @@ class TestCommunities:
             assert "name" in comm
             assert "size" in comm
             assert comm["size"] >= 2
+
+    def test_detect_communities_respects_disable_igraph_env(self, monkeypatch):
+        self._seed_two_clusters()
+        monkeypatch.setenv("CRG_DISABLE_IGRAPH_COMMUNITIES", "1")
+
+        result = detect_communities(self.store, min_size=2)
+
+        assert len(result) >= 2
+        assert communities_module._force_file_based_communities() is True
+
+    def test_detect_communities_skips_split_when_igraph_disabled_env(self, monkeypatch):
+        self._seed_two_clusters()
+        monkeypatch.setenv("CRG_DISABLE_IGRAPH_COMMUNITIES", "1")
+
+        def fail_split(*args, **kwargs):
+            raise AssertionError("_split_oversized should not run")
+
+        monkeypatch.setattr(communities_module, "_split_oversized", fail_split)
+
+        result = detect_communities(self.store, min_size=2)
+
+        assert len(result) >= 2
 
     def test_community_naming(self):
         """Community naming produces non-empty names."""

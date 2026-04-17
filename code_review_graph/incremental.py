@@ -252,6 +252,16 @@ _RECURSE_SUBMODULES = os.environ.get(
 ).lower() in ("1", "true", "yes")
 
 
+def _git_env() -> dict[str, str]:
+    """Return a non-interactive git environment safe for MCP stdio hosts."""
+    env = os.environ.copy()
+    env.setdefault("GIT_TERMINAL_PROMPT", "0")
+    env.setdefault("GCM_INTERACTIVE", "Never")
+    env.setdefault("GIT_PAGER", "cat")
+    env.setdefault("PAGER", "cat")
+    return env
+
+
 def _git_branch_info(repo_root: Path) -> tuple[str, str]:
     """Return (branch_name, head_sha) for the current repo state."""
     branch = ""
@@ -261,6 +271,7 @@ def _git_branch_info(repo_root: Path) -> tuple[str, str]:
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
             capture_output=True, text=True,
             cwd=str(repo_root), timeout=_GIT_TIMEOUT,
+            stdin=subprocess.DEVNULL, env=_git_env(),
         )
         if result.returncode == 0:
             branch = result.stdout.strip()
@@ -271,6 +282,7 @@ def _git_branch_info(repo_root: Path) -> tuple[str, str]:
             ["git", "rev-parse", "HEAD"],
             capture_output=True, text=True,
             cwd=str(repo_root), timeout=_GIT_TIMEOUT,
+            stdin=subprocess.DEVNULL, env=_git_env(),
         )
         if result.returncode == 0:
             sha = result.stdout.strip()
@@ -288,20 +300,45 @@ def get_changed_files(repo_root: Path, base: str = "HEAD~1") -> list[str]:
         return []
     try:
         result = subprocess.run(
-            ["git", "diff", "--name-only", base, "--"],
+            [
+                "git",
+                "-c", "core.pager=cat",
+                "-c", "pager.diff=false",
+                "-c", "interactive.diffFilter=false",
+                "diff",
+                "--name-only",
+                "--no-ext-diff",
+                "--no-textconv",
+                base,
+                "--",
+            ],
             capture_output=True,
             text=True,
             cwd=str(repo_root),
             timeout=_GIT_TIMEOUT,
+            stdin=subprocess.DEVNULL,
+            env=_git_env(),
         )
         if result.returncode != 0:
             # Fallback: try diff against empty tree (initial commit)
             result = subprocess.run(
-                ["git", "diff", "--name-only", "--cached"],
+                [
+                    "git",
+                    "-c", "core.pager=cat",
+                    "-c", "pager.diff=false",
+                    "-c", "interactive.diffFilter=false",
+                    "diff",
+                    "--name-only",
+                    "--no-ext-diff",
+                    "--no-textconv",
+                    "--cached",
+                ],
                 capture_output=True,
                 text=True,
                 cwd=str(repo_root),
                 timeout=_GIT_TIMEOUT,
+                stdin=subprocess.DEVNULL,
+                env=_git_env(),
             )
         files = [f.strip() for f in result.stdout.splitlines() if f.strip()]
         return files
@@ -318,6 +355,8 @@ def get_staged_and_unstaged(repo_root: Path) -> list[str]:
             text=True,
             cwd=str(repo_root),
             timeout=_GIT_TIMEOUT,
+            stdin=subprocess.DEVNULL,
+            env=_git_env(),
         )
         files = []
         for line in result.stdout.splitlines():
@@ -359,6 +398,8 @@ def get_all_tracked_files(
             text=True,
             cwd=str(repo_root),
             timeout=_GIT_TIMEOUT,
+            stdin=subprocess.DEVNULL,
+            env=_git_env(),
         )
         return [f.strip() for f in result.stdout.splitlines() if f.strip()]
     except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -486,6 +527,13 @@ def _parse_single_file(
         return (rel_path, [], [], str(e), "")
 
 
+def _create_parse_executor() -> concurrent.futures.Executor:
+    """Use threads on Windows MCP hosts to avoid multiprocessing spawn failures."""
+    if os.name == "nt" and os.environ.get("CRG_FORCE_PROCESS_POOL", "") != "1":
+        return concurrent.futures.ThreadPoolExecutor(max_workers=_MAX_PARSE_WORKERS)
+    return concurrent.futures.ProcessPoolExecutor(max_workers=_MAX_PARSE_WORKERS)
+
+
 def full_build(
     repo_root: Path,
     store: GraphStore,
@@ -541,9 +589,7 @@ def full_build(
     else:
         # Parallel parsing — store calls remain serial (SQLite single-writer)
         args_list = [(rel_path, str(repo_root)) for rel_path in files]
-        with concurrent.futures.ProcessPoolExecutor(
-            max_workers=_MAX_PARSE_WORKERS,
-        ) as executor:
+        with _create_parse_executor() as executor:
             for i, (rel_path, nodes, edges, error, fhash) in enumerate(
                 executor.map(_parse_single_file, args_list, chunksize=20), 1,
             ):
@@ -667,9 +713,7 @@ def incremental_update(
                 errors.append({"file": rel_path, "error": str(e)})
     else:
         args_list = [(rel_path, str(repo_root)) for rel_path in to_parse]
-        with concurrent.futures.ProcessPoolExecutor(
-            max_workers=_MAX_PARSE_WORKERS,
-        ) as executor:
+        with _create_parse_executor() as executor:
             for rel_path, nodes, edges, error, fhash in executor.map(
                 _parse_single_file, args_list, chunksize=20,
             ):

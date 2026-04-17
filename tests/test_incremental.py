@@ -271,6 +271,14 @@ class TestGitOperations:
         call_args = mock_run.call_args
         assert "git" in call_args[0][0]
         assert call_args[1].get("timeout") == 30
+        assert call_args[1]["stdin"] == subprocess.DEVNULL
+        env = call_args[1]["env"]
+        assert env["GIT_TERMINAL_PROMPT"] == "0"
+        assert env["GCM_INTERACTIVE"] == "Never"
+        assert env["GIT_PAGER"] == "cat"
+        assert env["PAGER"] == "cat"
+        assert "--no-ext-diff" in call_args[0][0]
+        assert "--no-textconv" in call_args[0][0]
 
     @patch("code_review_graph.incremental.subprocess.run")
     def test_get_changed_files_fallback(self, mock_run, tmp_path):
@@ -301,6 +309,11 @@ class TestGitOperations:
         assert "new_name.py" in result
         # old.py should NOT be in results (renamed away)
         assert "old.py" not in result
+        kwargs = mock_run.call_args[1]
+        assert kwargs["stdin"] == subprocess.DEVNULL
+        env = kwargs["env"]
+        assert env["GIT_TERMINAL_PROMPT"] == "0"
+        assert env["GCM_INTERACTIVE"] == "Never"
 
     @patch("code_review_graph.incremental.subprocess.run")
     def test_get_all_tracked_files(self, mock_run, tmp_path):

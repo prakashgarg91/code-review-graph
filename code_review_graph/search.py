@@ -181,7 +181,7 @@ def _embedding_search(
         return []
 
     try:
-        emb_store = EmbeddingStore(store.db_path, model=model)
+        emb_store = EmbeddingStore(store.db_path, model=model, allow_cold_load=False)
         try:
             if not emb_store.available or emb_store.count() == 0:
                 return []
@@ -391,3 +391,4 @@ def hybrid_search(
         })
 
     return results
+

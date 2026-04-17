@@ -18,9 +18,19 @@ from .graph import GraphNode, GraphStore, _sanitize_name, node_to_dict
 
 logger = logging.getLogger(__name__)
 
-_GIT_TIMEOUT = int(os.environ.get("CRG_GIT_TIMEOUT", "30"))  # seconds, configurable
+_GIT_TIMEOUT = int(os.environ.get("CRG_GIT_TIMEOUT", "5"))  # seconds, configurable
 
 _SAFE_GIT_REF = re.compile(r"^[A-Za-z0-9_.~^/@{}\-]+$")
+
+
+def _git_env() -> dict[str, str]:
+    """Return a non-interactive git environment safe for MCP stdio hosts."""
+    env = os.environ.copy()
+    env.setdefault("GIT_TERMINAL_PROMPT", "0")
+    env.setdefault("GCM_INTERACTIVE", "Never")
+    env.setdefault("GIT_PAGER", "cat")
+    env.setdefault("PAGER", "cat")
+    return env
 
 
 # ---------------------------------------------------------------------------
@@ -47,13 +57,26 @@ def parse_git_diff_ranges(
         return {}
     try:
         result = subprocess.run(
-            ["git", "diff", "--unified=0", base, "--"],
+            [
+                "git",
+                "-c", "core.pager=cat",
+                "-c", "pager.diff=false",
+                "-c", "interactive.diffFilter=false",
+                "diff",
+                "--unified=0",
+                "--no-ext-diff",
+                "--no-textconv",
+                base,
+                "--",
+            ],
             capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
             cwd=repo_root,
             timeout=_GIT_TIMEOUT,
+            stdin=subprocess.DEVNULL,
+            env=_git_env(),
         )
         if result.returncode != 0:
             logger.warning("git diff failed (rc=%d): %s", result.returncode, result.stderr[:200])

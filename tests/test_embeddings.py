@@ -8,9 +8,11 @@ import pytest
 
 from code_review_graph.embeddings import (
     LOCAL_DEFAULT_MODEL,
+    OLLAMA_DEFAULT_MODEL,
     EmbeddingStore,
     LocalEmbeddingProvider,
     MiniMaxEmbeddingProvider,
+    OllamaEmbeddingProvider,
     _cosine_similarity,
     _decode_vector,
     _encode_vector,
@@ -166,20 +168,88 @@ class TestLocalEmbeddingProviderModelName:
             assert provider.name == "local:BAAI/bge-small-en-v1.5"
 
 
+class TestOllamaEmbeddingProvider:
+    def test_embed_uses_document_prefix_and_tracks_dimension(self):
+        mock_response = json.dumps({"embeddings": [[0.1, 0.2, 0.3]]}).encode("utf-8")
+        mock_resp_obj = MagicMock()
+        mock_resp_obj.read.return_value = mock_response
+        mock_resp_obj.__enter__ = MagicMock(return_value=mock_resp_obj)
+        mock_resp_obj.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_resp_obj) as mock_urlopen:
+            provider = OllamaEmbeddingProvider(model_name=OLLAMA_DEFAULT_MODEL)
+            result = provider.embed(["hello world"])
+
+        assert result == [[0.1, 0.2, 0.3]]
+        req = mock_urlopen.call_args[0][0]
+        payload = json.loads(req.data.decode("utf-8"))
+        assert payload["model"] == OLLAMA_DEFAULT_MODEL
+        assert payload["input"] == ["search_document: hello world"]
+        assert provider.dimension == 3
+        assert provider.name == f"ollama:{OLLAMA_DEFAULT_MODEL}"
+
+    def test_embed_query_uses_query_prefix(self):
+        mock_response = json.dumps({"embeddings": [[0.1, 0.2]]}).encode("utf-8")
+        mock_resp_obj = MagicMock()
+        mock_resp_obj.read.return_value = mock_response
+        mock_resp_obj.__enter__ = MagicMock(return_value=mock_resp_obj)
+        mock_resp_obj.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_resp_obj) as mock_urlopen:
+            provider = OllamaEmbeddingProvider(model_name=OLLAMA_DEFAULT_MODEL)
+            result = provider.embed_query("find function")
+
+        assert result == [0.1, 0.2]
+        req = mock_urlopen.call_args[0][0]
+        payload = json.loads(req.data.decode("utf-8"))
+        assert payload["input"] == ["search_query: find function"]
+
+
+
 class TestGetProviderModel:
     """Tests for model parameter in get_provider()."""
 
-    @patch("code_review_graph.embeddings.LocalEmbeddingProvider")
-    def test_local_passes_model(self, mock_cls):
-        mock_cls.return_value = MagicMock()
-        get_provider(provider=None, model="custom/model")
+    def test_local_passes_model(self):
+        with patch("code_review_graph.embeddings._ollama_model_available", return_value=False):
+            with patch("code_review_graph.embeddings.LocalEmbeddingProvider") as mock_cls:
+                mock_cls.return_value = MagicMock()
+                get_provider(provider=None, model="custom/model")
         mock_cls.assert_called_once_with(model_name="custom/model")
 
-    @patch("code_review_graph.embeddings.LocalEmbeddingProvider")
-    def test_local_default_passes_none(self, mock_cls):
-        mock_cls.return_value = MagicMock()
-        get_provider(provider=None, model=None)
+    def test_local_default_passes_none(self):
+        with patch("code_review_graph.embeddings._ollama_model_available", return_value=False):
+            with patch("code_review_graph.embeddings.LocalEmbeddingProvider") as mock_cls:
+                mock_cls.return_value = MagicMock()
+                get_provider(provider=None, model=None)
         mock_cls.assert_called_once_with(model_name=None)
+
+    def test_ollama_model_auto_selects_ollama_provider(self):
+        with patch("code_review_graph.embeddings._ollama_model_available", return_value=True):
+            with patch("code_review_graph.embeddings.OllamaEmbeddingProvider") as mock_cls:
+                mock_cls.return_value = MagicMock()
+                get_provider(provider=None, model=OLLAMA_DEFAULT_MODEL)
+        mock_cls.assert_called_once_with(model_name=OLLAMA_DEFAULT_MODEL)
+
+    def test_default_prefers_ollama_when_model_available(self):
+        with patch(
+            "code_review_graph.embeddings._ollama_model_available",
+            side_effect=lambda model: model == OLLAMA_DEFAULT_MODEL,
+        ):
+            with patch("code_review_graph.embeddings.OllamaEmbeddingProvider") as mock_cls:
+                mock_cls.return_value = MagicMock()
+                get_provider(provider=None, model=None)
+        mock_cls.assert_called_once_with(model_name=OLLAMA_DEFAULT_MODEL)
+
+    def test_warm_only_local_mode_skips_provider_init(self):
+        with patch("code_review_graph.embeddings._ollama_model_available", return_value=False):
+            with patch("code_review_graph.embeddings.LocalEmbeddingProvider") as mock_cls:
+                provider = get_provider(
+                    provider="local",
+                    model="custom/model",
+                    allow_cold_load=False,
+                )
+        assert provider is None
+        mock_cls.assert_not_called()
 
 
 class TestCloudProviderWarning:
@@ -247,13 +317,31 @@ class TestEmbeddingStoreModelPassthrough:
         db = tmp_path / "embeddings.db"
         with patch("code_review_graph.embeddings.get_provider", return_value=None) as mock_gp:
             EmbeddingStore(db, model="custom/model").close()
-            mock_gp.assert_called_once_with(None, model="custom/model")
+            mock_gp.assert_called_once_with(
+                None,
+                model="custom/model",
+                allow_cold_load=True,
+            )
 
     def test_provider_and_model_forwarded(self, tmp_path):
         db = tmp_path / "embeddings.db"
         with patch("code_review_graph.embeddings.get_provider", return_value=None) as mock_gp:
             EmbeddingStore(db, provider="local", model="custom/model").close()
-            mock_gp.assert_called_once_with("local", model="custom/model")
+            mock_gp.assert_called_once_with(
+                "local",
+                model="custom/model",
+                allow_cold_load=True,
+            )
+
+    def test_allow_cold_load_forwarded(self, tmp_path):
+        db = tmp_path / "embeddings.db"
+        with patch("code_review_graph.embeddings.get_provider", return_value=None) as mock_gp:
+            EmbeddingStore(db, allow_cold_load=False).close()
+            mock_gp.assert_called_once_with(
+                None,
+                model=None,
+                allow_cold_load=False,
+            )
 
 
 class TestMiniMaxEmbeddingProvider:
@@ -345,3 +433,7 @@ class TestGetProviderMiniMax:
         with patch.dict("os.environ", {}, clear=True):
             with pytest.raises(ValueError, match="MINIMAX_API_KEY"):
                 get_provider("minimax")
+
+
+
+

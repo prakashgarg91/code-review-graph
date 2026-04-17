@@ -1,5 +1,6 @@
 """Tests for MCP tool functions."""
 
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -1133,3 +1134,112 @@ class TestGetMinimalContext:
             task="refactor auth module", repo_root=str(self.root),
         )
         assert "refactor" in result["next_tool_suggestions"]
+
+    def test_skips_deep_risk_analysis_for_large_change_sets(self, monkeypatch):
+        from code_review_graph.tools import context as context_mod
+
+        called = False
+
+        def fake_lightweight_risk(root, files):
+            nonlocal called
+            called = True
+            return ("medium", 0.5, ["main"], 7)
+
+        monkeypatch.setattr(
+            context_mod,
+            "_detect_changed_files",
+            lambda root, base, changed_files: (
+                [f"file_{index}.py" for index in range(
+                    context_mod._MAX_CHANGED_FILES_FOR_DEEP_RISK + 1
+                )],
+                "git-diff",
+            ),
+        )
+        monkeypatch.setattr(context_mod, "_summarize_lightweight_risk", fake_lightweight_risk)
+
+        result = context_mod.get_minimal_context(
+            task="review changes",
+            repo_root=str(self.root),
+        )
+
+        assert called is False
+        assert "Deep risk analysis skipped for fast path." in result["summary"]
+
+    def test_uses_lightweight_risk_for_small_change_sets(self, monkeypatch):
+        from code_review_graph.tools import context as context_mod
+
+        monkeypatch.setattr(
+            context_mod,
+            "_detect_changed_files",
+            lambda root, base, changed_files: (["app.py"], "provided"),
+        )
+        monkeypatch.setattr(
+            context_mod,
+            "_summarize_lightweight_risk",
+            lambda root, files: ("medium", 0.5, ["main"], 7),
+        )
+
+        result = context_mod.get_minimal_context(
+            task="review changes",
+            repo_root=str(self.root),
+        )
+
+        assert result["risk"] == "medium"
+        assert "Lightweight risk heuristic used for fast path." in result["summary"]
+
+    def test_change_detection_timeout_does_not_block_or_crash(self, monkeypatch):
+        from code_review_graph.tools import context as context_mod
+
+        monkeypatch.setattr(
+            context_mod.subprocess,
+            "run",
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                subprocess.TimeoutExpired(cmd="git diff", timeout=2)
+            ),
+        )
+
+        result = context_mod.get_minimal_context(
+            task="review changes",
+            repo_root=str(self.root),
+        )
+
+        assert result["status"] == "ok"
+        assert "changed file(s) detected" not in result["summary"]
+
+    def test_change_detection_uses_noninteractive_git_invocation(self, monkeypatch):
+        from code_review_graph.tools import context as context_mod
+
+        captured: list[tuple[tuple[object, ...], dict[str, object]]] = []
+
+        class DummyCompletedProcess:
+            returncode = 0
+            stdout = "alpha.py\nbeta.py\n"
+
+        def fake_run(*args, **kwargs):
+            captured.append((args, kwargs))
+            return DummyCompletedProcess()
+
+        monkeypatch.setattr(context_mod.subprocess, "run", fake_run)
+
+        result = context_mod.get_minimal_context(
+            task="review changes",
+            repo_root=str(self.root),
+        )
+
+        assert "2 changed file(s) detected." in result["summary"]
+        diff_call = next(
+            (call for call in captured if "--no-ext-diff" in call[0][0]),
+            None,
+        )
+        assert diff_call is not None
+        kwargs = diff_call[1]
+        assert kwargs["stdin"] == subprocess.DEVNULL
+        assert kwargs["timeout"] == context_mod._MINIMAL_CONTEXT_GIT_TIMEOUT
+        env = kwargs["env"]
+        assert env["GIT_TERMINAL_PROMPT"] == "0"
+        assert env["GCM_INTERACTIVE"] == "Never"
+        assert env["GIT_PAGER"] == "cat"
+        assert env["PAGER"] == "cat"
+        command = diff_call[0][0]
+        assert "--no-ext-diff" in command
+        assert "--no-textconv" in command
