@@ -451,6 +451,12 @@ def main() -> None:
     # serve
     serve_cmd = sub.add_parser("serve", help="Start MCP server (stdio transport)")
     serve_cmd.add_argument("--repo", default=None, help="Repository root (auto-detected)")
+    serve_cmd.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Override stale PID lock and start even if a lock file exists",
+    )
 
     args = ap.parse_args()
 
@@ -464,7 +470,7 @@ def main() -> None:
 
     if args.command == "serve":
         from .main import main as serve_main
-        serve_main(repo_root=args.repo)
+        serve_main(repo_root=args.repo, force=getattr(args, "force", False))
         return
 
     if args.command == "eval":

@@ -7,12 +7,15 @@ Communicates via stdio (standard MCP transport).
 from __future__ import annotations
 
 import asyncio
-import functools
-import inspect
+import atexit
 import logging
+import os
+import signal
 import sys
-import time
-from typing import Any, Optional
+from pathlib import Path
+from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from fastmcp import FastMCP
 
@@ -33,17 +36,12 @@ from .tools import (
     generate_wiki_func,
     get_affected_flows_func,
     get_architecture_overview_func,
-    get_bridge_nodes_func,
     get_community_func,
     get_docs_section,
     get_flow,
-    get_hub_nodes_func,
     get_impact_radius,
-    get_knowledge_gaps_func,
     get_minimal_context,
     get_review_context,
-    get_suggested_questions_func,
-    get_surprising_connections_func,
     get_wiki_page_func,
     list_communities_func,
     list_flows,
@@ -53,32 +51,119 @@ from .tools import (
     refactor_func,
     run_postprocess,
     semantic_search_nodes,
-    traverse_graph_func,
 )
 
 # NOTE: Thread-safe for stdio MCP (single-threaded). If adding HTTP/SSE
 # transport with concurrent requests, replace with contextvars.ContextVar.
 _default_repo_root: str | None = None
-logger = logging.getLogger(__name__)
+
+# Path of the PID lock file written by this process; cleared on exit.
+_pid_lock_path: Path | None = None
 
 
-def _configure_package_logging() -> None:
-    """Emit code-review-graph diagnostic logs to stderr for MCP hosts."""
-    package_logger = logging.getLogger("code_review_graph")
-    package_logger.setLevel(logging.INFO)
-    package_logger.propagate = False
+# ---------------------------------------------------------------------------
+# Single-instance guard
+# ---------------------------------------------------------------------------
 
-    for handler in package_logger.handlers:
-        if isinstance(handler, logging.StreamHandler) and getattr(handler, "stream", None) is sys.stderr:
-            handler.setLevel(logging.INFO)
-            return
+def _is_pid_alive(pid: int) -> bool:
+    """Return True if *pid* names a live process (cross-platform)."""
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        # Process exists but we can't signal it — still alive.
+        return True
+    except OSError:
+        return False
+    return True
 
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setLevel(logging.INFO)
-    handler.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
-    )
-    package_logger.addHandler(handler)
+
+def _acquire_serve_lock(repo_root: str | None, *, force: bool = False) -> Path | None:
+    """Write a PID lock file so only one ``serve`` runs per repo.
+
+    Returns the lock ``Path`` on success.  Returns ``None`` when the data
+    directory cannot be resolved (e.g. outside any git repo).
+
+    If a *live* instance already holds the lock this function prints a
+    diagnostic to stderr and calls ``sys.exit(0)`` — the MCP host sees a
+    clean exit rather than a duplicate server sitting idle forever.
+
+    A stale lock (process no longer alive) is silently overwritten.
+    Pass ``force=True`` to skip the live-instance check (e.g. after a
+    forceful kill where the PID file was not cleaned up).
+    """
+    from .incremental import find_project_root, get_data_dir
+
+    root = Path(repo_root).resolve() if repo_root else find_project_root()
+    if root is None:
+        return None
+
+    data_dir = get_data_dir(root)
+    lock_path = data_dir / "serve.pid"
+
+    if not force and lock_path.exists():
+        try:
+            existing_pid = int(lock_path.read_text(encoding="utf-8").strip())
+        except (ValueError, OSError):
+            existing_pid = None
+
+        if existing_pid and existing_pid != os.getpid() and _is_pid_alive(existing_pid):
+            print(
+                f"[code-review-graph] Server already running for '{root}' "
+                f"(PID {existing_pid}). Exiting to avoid duplicate instance.\n"
+                "  Kill it with:  taskkill /F /PID "
+                f"{existing_pid}  (Windows)\n"
+                "  or:            kill "
+                f"{existing_pid}  (Unix)\n"
+                "  Override with: code-review-graph serve --force",
+                file=sys.stderr,
+            )
+            sys.exit(0)
+
+    try:
+        lock_path.write_text(str(os.getpid()), encoding="utf-8")
+    except OSError as exc:
+        logger.warning("Could not write PID lock at %s: %s", lock_path, exc)
+        return None
+
+    return lock_path
+
+
+def _release_serve_lock() -> None:
+    """Remove the PID lock file — registered as an atexit handler."""
+    global _pid_lock_path
+    path = _pid_lock_path
+    _pid_lock_path = None
+    if path is not None:
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def _install_signal_handlers() -> None:
+    """Register SIGTERM/SIGINT handlers to clean up the PID lock on exit.
+
+    Only installs when called from the main thread (signal handlers cannot
+    be set from non-main threads).  Falls back silently on platforms that
+    don't support a given signal (e.g. SIGTERM on bare Windows).
+    """
+    import threading
+    if threading.current_thread() is not threading.main_thread():
+        return
+
+    def _handler(signum: int, frame: object) -> None:  # noqa: ARG001
+        _release_serve_lock()
+        sys.exit(0)
+
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            signal.signal(sig, _handler)
+        except (OSError, ValueError):
+            pass  # signal not supported on this platform / thread
+
+
 
 
 def _resolve_repo_root(repo_root: Optional[str]) -> Optional[str]:
@@ -97,160 +182,6 @@ def _resolve_repo_root(repo_root: Optional[str]) -> Optional[str]:
     return repo_root if repo_root else _default_repo_root
 
 
-def _format_tool_value(value: Any, *, max_length: int = 160) -> str:
-    """Return a compact, log-friendly representation of a tool arg/result."""
-    if isinstance(value, (list, tuple, set)):
-        return f"{len(value)} item(s)"
-    if isinstance(value, dict):
-        return f"{len(value)} key(s)"
-
-    text = str(value).replace("\n", " ")
-    if len(text) > max_length:
-        return f"{text[:max_length - 3]}..."
-    return text
-
-
-def _summarize_tool_call(func: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
-    """Extract a short, stable summary of the important tool arguments."""
-    try:
-        bound = inspect.signature(func).bind_partial(*args, **kwargs)
-    except TypeError:
-        return ""
-
-    parts: list[str] = []
-    simple_fields = (
-        "repo_root", "base", "detail_level", "task", "pattern", "target",
-        "section_name", "kind", "mode", "flow_name", "community_name",
-    )
-    count_fields = ("changed_files",)
-    numeric_fields = ("max_depth", "limit", "top_n", "min_lines")
-
-    for field in simple_fields:
-        value = bound.arguments.get(field)
-        if value not in (None, "", []):
-            parts.append(f"{field}={_format_tool_value(value)}")
-
-    for field in count_fields:
-        value = bound.arguments.get(field)
-        if value is not None:
-            parts.append(f"{field}={_format_tool_value(value)}")
-
-    for field in numeric_fields:
-        value = bound.arguments.get(field)
-        if value is not None:
-            parts.append(f"{field}={value}")
-
-    return ", ".join(parts)
-
-
-def _summarize_tool_result(result: Any) -> str:
-    """Extract a compact status/summary string for tool completion logs."""
-    if not isinstance(result, dict):
-        return f"result={type(result).__name__}"
-
-    parts: list[str] = []
-    status = result.get("status")
-    if status is not None:
-        parts.append(f"status={status}")
-
-    for key in ("summary", "error"):
-        value = result.get(key)
-        if value:
-            parts.append(f"{key}={_format_tool_value(value)}")
-            break
-
-    return ", ".join(parts)
-
-
-def _instrument_tool(func: Any) -> Any:
-    """Wrap a tool function with start/done/error timing logs."""
-    signature = inspect.signature(func)
-    tool_name = getattr(func, "__name__", "unknown_tool")
-
-    if inspect.iscoroutinefunction(func):
-        @functools.wraps(func)
-        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
-            call_summary = _summarize_tool_call(func, args, kwargs)
-            if call_summary:
-                logger.info("mcp_tool.start name=%s %s", tool_name, call_summary)
-            else:
-                logger.info("mcp_tool.start name=%s", tool_name)
-
-            started = time.perf_counter()
-            try:
-                result = await func(*args, **kwargs)
-            except Exception:
-                duration_ms = int((time.perf_counter() - started) * 1000)
-                if call_summary:
-                    logger.exception(
-                        "mcp_tool.error name=%s duration_ms=%d %s",
-                        tool_name,
-                        duration_ms,
-                        call_summary,
-                    )
-                else:
-                    logger.exception(
-                        "mcp_tool.error name=%s duration_ms=%d",
-                        tool_name,
-                        duration_ms,
-                    )
-                raise
-
-            duration_ms = int((time.perf_counter() - started) * 1000)
-            result_summary = _summarize_tool_result(result)
-            logger.info(
-                "mcp_tool.done name=%s duration_ms=%d %s",
-                tool_name,
-                duration_ms,
-                result_summary,
-            )
-            return result
-
-        async_wrapper.__signature__ = signature
-        return async_wrapper
-
-    @functools.wraps(func)
-    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
-        call_summary = _summarize_tool_call(func, args, kwargs)
-        if call_summary:
-            logger.info("mcp_tool.start name=%s %s", tool_name, call_summary)
-        else:
-            logger.info("mcp_tool.start name=%s", tool_name)
-
-        started = time.perf_counter()
-        try:
-            result = func(*args, **kwargs)
-        except Exception:
-            duration_ms = int((time.perf_counter() - started) * 1000)
-            if call_summary:
-                logger.exception(
-                    "mcp_tool.error name=%s duration_ms=%d %s",
-                    tool_name,
-                    duration_ms,
-                    call_summary,
-                )
-            else:
-                logger.exception(
-                    "mcp_tool.error name=%s duration_ms=%d",
-                    tool_name,
-                    duration_ms,
-                )
-            raise
-
-        duration_ms = int((time.perf_counter() - started) * 1000)
-        result_summary = _summarize_tool_result(result)
-        logger.info(
-            "mcp_tool.done name=%s duration_ms=%d %s",
-            tool_name,
-            duration_ms,
-            result_summary,
-        )
-        return result
-
-    sync_wrapper.__signature__ = signature
-    return sync_wrapper
-
-
 mcp = FastMCP(
     "code-review-graph",
     instructions=(
@@ -262,7 +193,6 @@ mcp = FastMCP(
 
 
 @mcp.tool()
-@_instrument_tool
 async def build_or_update_graph_tool(
     full_rebuild: bool = False,
     repo_root: Optional[str] = None,
@@ -303,7 +233,6 @@ async def build_or_update_graph_tool(
 
 
 @mcp.tool()
-@_instrument_tool
 async def run_postprocess_tool(
     flows: bool = True,
     communities: bool = True,
@@ -315,10 +244,9 @@ async def run_postprocess_tool(
     Use after building with postprocess="none" or "minimal", or to re-run
     expensive steps independently. Signatures are always computed.
 
-    Flow/FTS-only runs are offloaded to a thread via ``asyncio.to_thread``.
-    Community recomputation executes inline because the Windows MCP runtime
-    can hang when the igraph-based community path runs inside ``to_thread``
-    even though the same work completes quickly in the main thread.
+    Offloaded to a thread via ``asyncio.to_thread`` so community
+    detection on large graphs doesn't block the MCP event loop. See:
+    #46, #136.
 
     Args:
         flows: Run flow detection. Default: True.
@@ -326,27 +254,15 @@ async def run_postprocess_tool(
         fts: Rebuild FTS index. Default: True.
         repo_root: Repository root path. Auto-detected if omitted.
     """
-    resolved_repo_root = _resolve_repo_root(repo_root)
-    if communities:
-        return run_postprocess(
-            flows=flows,
-            communities=communities,
-            fts=fts,
-            repo_root=resolved_repo_root,
-        )
-
     return await asyncio.to_thread(
         run_postprocess,
-        flows=flows,
-        communities=communities,
-        fts=fts,
-        repo_root=resolved_repo_root,
+        flows=flows, communities=communities, fts=fts,
+        repo_root=_resolve_repo_root(repo_root),
     )
 
 
 @mcp.tool()
-@_instrument_tool
-async def get_minimal_context_tool(
+def get_minimal_context_tool(
     task: str = "",
     changed_files: Optional[list[str]] = None,
     repo_root: Optional[str] = None,
@@ -364,17 +280,13 @@ async def get_minimal_context_tool(
         repo_root: Repository root path. Auto-detected if omitted.
         base: Git ref for diff comparison. Default: HEAD~1.
     """
-    return await asyncio.to_thread(
-        get_minimal_context,
-        task=task,
-        changed_files=changed_files,
-        repo_root=_resolve_repo_root(repo_root),
-        base=base,
+    return get_minimal_context(
+        task=task, changed_files=changed_files,
+        repo_root=_resolve_repo_root(repo_root), base=base,
     )
 
 
 @mcp.tool()
-@_instrument_tool
 def get_impact_radius_tool(
     changed_files: Optional[list[str]] = None,
     max_depth: int = 2,
@@ -401,7 +313,6 @@ def get_impact_radius_tool(
 
 
 @mcp.tool()
-@_instrument_tool
 def query_graph_tool(
     pattern: str,
     target: str,
@@ -433,7 +344,6 @@ def query_graph_tool(
 
 
 @mcp.tool()
-@_instrument_tool
 def get_review_context_tool(
     changed_files: Optional[list[str]] = None,
     max_depth: int = 2,
@@ -466,8 +376,7 @@ def get_review_context_tool(
 
 
 @mcp.tool()
-@_instrument_tool
-async def semantic_search_nodes_tool(
+def semantic_search_nodes_tool(
     query: str,
     kind: Optional[str] = None,
     limit: int = 20,
@@ -478,8 +387,7 @@ async def semantic_search_nodes_tool(
     """Search for code entities by name, keyword, or semantic similarity.
 
     Uses vector embeddings for semantic search when available (run embed_graph_tool
-    first, supports sentence-transformers and local Ollama embedding models).
-    Falls back to keyword matching otherwise.
+    first, requires sentence-transformers). Falls back to keyword matching otherwise.
 
     Args:
         query: Search string to match against node names.
@@ -488,23 +396,16 @@ async def semantic_search_nodes_tool(
         repo_root: Repository root path. Auto-detected if omitted.
         model: Embedding model for query vectors. Must match the model used
                during embed_graph. Falls back to CRG_EMBEDDING_MODEL env var,
-               then prefers nomic-embed-text-v2-moe:latest via Ollama when
-               available, otherwise all-MiniLM-L6-v2.
+               then all-MiniLM-L6-v2.
         detail_level: "standard" for full output, "minimal" for compact summary. Default: standard.
     """
-    return await asyncio.to_thread(
-        semantic_search_nodes,
-        query=query,
-        kind=kind,
-        limit=limit,
-        repo_root=_resolve_repo_root(repo_root),
-        model=model,
+    return semantic_search_nodes(
+        query=query, kind=kind, limit=limit, repo_root=_resolve_repo_root(repo_root), model=model,
         detail_level=detail_level,
     )
 
 
 @mcp.tool()
-@_instrument_tool
 async def embed_graph_tool(
     repo_root: Optional[str] = None,
     model: Optional[str] = None,
@@ -526,10 +427,8 @@ async def embed_graph_tool(
 
     Args:
         repo_root: Repository root path. Auto-detected if omitted.
-        model: Embedding model name (HuggingFace ID, Ollama tag, or local path).
-               Falls back to CRG_EMBEDDING_MODEL env var, then prefers
-               nomic-embed-text-v2-moe:latest via Ollama when available,
-               otherwise all-MiniLM-L6-v2.
+        model: Embedding model name (HuggingFace ID or local path).
+               Falls back to CRG_EMBEDDING_MODEL env var, then all-MiniLM-L6-v2.
     """
     return await asyncio.to_thread(
         embed_graph,
@@ -539,8 +438,7 @@ async def embed_graph_tool(
 
 
 @mcp.tool()
-@_instrument_tool
-async def list_graph_stats_tool(
+def list_graph_stats_tool(
     repo_root: Optional[str] = None,
 ) -> dict:
     """Get aggregate statistics about the code knowledge graph.
@@ -551,10 +449,7 @@ async def list_graph_stats_tool(
     Args:
         repo_root: Repository root path. Auto-detected if omitted.
     """
-    return await asyncio.to_thread(
-        list_graph_stats,
-        repo_root=_resolve_repo_root(repo_root),
-    )
+    return list_graph_stats(repo_root=_resolve_repo_root(repo_root))
 
 
 @mcp.tool()
@@ -602,7 +497,6 @@ def find_large_functions_tool(
 
 
 @mcp.tool()
-@_instrument_tool
 def list_flows_tool(
     sort_by: str = "criticality",
     limit: int = 50,
@@ -657,7 +551,6 @@ def get_flow_tool(
 
 
 @mcp.tool()
-@_instrument_tool
 def get_affected_flows_tool(
     changed_files: Optional[list[str]] = None,
     base: str = "HEAD~1",
@@ -734,7 +627,6 @@ def get_community_tool(
 
 
 @mcp.tool()
-@_instrument_tool
 def get_architecture_overview_tool(
     repo_root: Optional[str] = None,
 ) -> dict:
@@ -751,7 +643,6 @@ def get_architecture_overview_tool(
 
 
 @mcp.tool()
-@_instrument_tool
 async def detect_changes_tool(
     base: str = "HEAD~1",
     changed_files: Optional[list[str]] = None,
@@ -899,134 +790,6 @@ def get_wiki_page_tool(
 
 
 @mcp.tool()
-def get_hub_nodes_tool(
-    top_n: int = 10,
-    repo_root: Optional[str] = None,
-) -> dict:
-    """Find the most connected nodes in the codebase (architectural hotspots).
-
-    Hub nodes have the highest total degree (in + out edges). Changes to
-    them have disproportionate blast radius. Excludes File nodes.
-
-    Args:
-        top_n: Number of top hubs to return. Default: 10.
-        repo_root: Repository root path. Auto-detected if omitted.
-    """
-    return get_hub_nodes_func(
-        repo_root=_resolve_repo_root(repo_root), top_n=top_n,
-    )
-
-
-@mcp.tool()
-def get_bridge_nodes_tool(
-    top_n: int = 10,
-    repo_root: Optional[str] = None,
-) -> dict:
-    """Find architectural chokepoints via betweenness centrality.
-
-    Bridge nodes sit on shortest paths between many node pairs.
-    If they break, multiple code regions lose connectivity.
-    Uses sampling approximation for graphs > 5000 nodes.
-
-    Args:
-        top_n: Number of top bridges to return. Default: 10.
-        repo_root: Repository root path. Auto-detected if omitted.
-    """
-    return get_bridge_nodes_func(
-        repo_root=_resolve_repo_root(repo_root), top_n=top_n,
-    )
-
-
-@mcp.tool()
-def get_knowledge_gaps_tool(
-    repo_root: Optional[str] = None,
-) -> dict:
-    """Identify structural weaknesses in the codebase graph.
-
-    Finds isolated nodes (disconnected), thin communities (< 3 members),
-    untested hotspots (high-degree nodes without test coverage), and
-    single-file communities.
-
-    Args:
-        repo_root: Repository root path. Auto-detected if omitted.
-    """
-    return get_knowledge_gaps_func(
-        repo_root=_resolve_repo_root(repo_root),
-    )
-
-
-@mcp.tool()
-def get_surprising_connections_tool(
-    top_n: int = 15,
-    repo_root: Optional[str] = None,
-) -> dict:
-    """Find unexpected architectural coupling via composite surprise scoring.
-
-    Scores edges by: cross-community (+0.3), cross-language (+0.2),
-    peripheral-to-hub (+0.2), cross-test-boundary (+0.15), and
-    unusual edge kinds (+0.15).
-
-    Args:
-        top_n: Number of top surprises to return. Default: 15.
-        repo_root: Repository root path. Auto-detected if omitted.
-    """
-    return get_surprising_connections_func(
-        repo_root=_resolve_repo_root(repo_root), top_n=top_n,
-    )
-
-
-@mcp.tool()
-def get_suggested_questions_tool(
-    repo_root: Optional[str] = None,
-) -> dict:
-    """Auto-generate review questions from graph analysis.
-
-    Produces prioritized questions about: bridge nodes needing tests,
-    untested hub nodes, surprising cross-community coupling, thin
-    communities, and untested hotspots.
-
-    Args:
-        repo_root: Repository root path. Auto-detected if omitted.
-    """
-    return get_suggested_questions_func(
-        repo_root=_resolve_repo_root(repo_root),
-    )
-
-
-@mcp.tool()
-async def traverse_graph_tool(
-    query: str,
-    mode: str = "bfs",
-    depth: int = 3,
-    token_budget: int = 2000,
-    repo_root: Optional[str] = None,
-) -> dict:
-    """BFS/DFS traversal from best-matching node with token budget.
-
-    Free-form graph exploration: finds the node best matching your
-    query, then traverses outward via BFS or DFS up to the given
-    depth, collecting connected nodes within the token budget.
-
-    Args:
-        query: Search string to find the starting node.
-        mode: Traversal mode: "bfs" (breadth-first) or "dfs"
-            (depth-first). Default: bfs.
-        depth: Max traversal depth (1-6). Default: 3.
-        token_budget: Approximate token limit for results.
-            Default: 2000.
-        repo_root: Repository root path. Auto-detected if omitted.
-    """
-    return await asyncio.to_thread(
-        traverse_graph_func,
-        query=query,
-        mode=mode,
-        depth=depth,
-        token_budget=token_budget,
-        repo_root=_resolve_repo_root(repo_root) or "",
-    )
-
-
-@mcp.tool()
 def list_repos_tool() -> dict:
     """List all registered repositories in the multi-repo registry.
 
@@ -1037,7 +800,7 @@ def list_repos_tool() -> dict:
 
 
 @mcp.tool()
-async def cross_repo_search_tool(
+def cross_repo_search_tool(
     query: str,
     kind: Optional[str] = None,
     limit: int = 20,
@@ -1052,12 +815,7 @@ async def cross_repo_search_tool(
         kind: Optional filter: File, Class, Function, Type, or Test.
         limit: Maximum results per repo. Default: 20.
     """
-    return await asyncio.to_thread(
-        cross_repo_search_func,
-        query=query,
-        kind=kind,
-        limit=limit,
-    )
+    return cross_repo_search_func(query=query, kind=kind, limit=limit)
 
 
 @mcp.prompt()
@@ -1114,7 +872,7 @@ def pre_merge_check(base: str = "HEAD~1") -> list[dict]:
     return pre_merge_check_prompt(base=base)
 
 
-def main(repo_root: str | None = None) -> None:
+def main(repo_root: str | None = None, *, force: bool = False) -> None:
     """Run the MCP server via stdio.
 
     On Windows, Python 3.8+ defaults to ``ProactorEventLoop``, which
@@ -1124,17 +882,34 @@ def main(repo_root: str | None = None) -> None:
     ``embed_graph_tool``. Switching to ``WindowsSelectorEventLoopPolicy``
     before fastmcp starts its loop avoids the deadlock.
     See: #46, #136
+
+    A PID lock file written to ``<data_dir>/serve.pid`` prevents multiple
+    instances accumulating for the same repository.  Stale locks (process
+    no longer alive) are overwritten automatically.  The lock is removed
+    via an atexit handler and SIGTERM/SIGINT signal handlers so it is
+    cleaned up on both clean exits and external kills.
+
+    The FastMCP startup banner is suppressed (``show_banner=False``) because
+    it makes a blocking network call to PyPI to check for updates, adding
+    ~5-7 s to the MCP ``initialize`` round-trip and flooding the VS Code
+    MCP log with dozens of stderr warning lines for every workspace open.
+
+    Args:
+        repo_root: Repository root path.  Auto-detected from cwd if omitted.
+        force: Skip the live-instance check and overwrite any existing PID lock.
     """
-    global _default_repo_root
+    global _default_repo_root, _pid_lock_path
     _default_repo_root = repo_root
-    _configure_package_logging()
+
+    # Acquire single-instance lock before the event loop starts.
+    _pid_lock_path = _acquire_serve_lock(repo_root, force=force)
+    atexit.register(_release_serve_lock)
+    _install_signal_handlers()
+
     if sys.platform == "win32":
-        import asyncio
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     mcp.run(transport="stdio", show_banner=False)
 
 
 if __name__ == "__main__":
     main()
-
-

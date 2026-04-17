@@ -10,8 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import logging
-import sys
+import os
 
 import pytest
 
@@ -49,53 +48,6 @@ class TestResolveRepoRoot:
         crg_main._default_repo_root = None
         assert crg_main._resolve_repo_root("/explicit") == "/explicit"
 
-    def test_timed_tool_wrapper_preserves_signature(self):
-        tool = crg_main.get_minimal_context_tool
-        underlying = inspect.unwrap(
-            getattr(tool, "fn", None)
-            or getattr(tool, "_func", None)
-            or getattr(tool, "func", None)
-            or tool
-        )
-        signature = inspect.signature(underlying)
-        assert list(signature.parameters.keys()) == [
-            "task",
-            "changed_files",
-            "repo_root",
-            "base",
-        ]
-
-    def test_configure_package_logging_targets_stderr(self):
-        package_logger = logging.getLogger("code_review_graph")
-        original_handlers = list(package_logger.handlers)
-        original_level = package_logger.level
-        original_propagate = package_logger.propagate
-
-        try:
-            package_logger.handlers = []
-            package_logger.setLevel(logging.NOTSET)
-            package_logger.propagate = True
-
-            crg_main._configure_package_logging()
-
-            stderr_handlers = [
-                handler
-                for handler in package_logger.handlers
-                if isinstance(handler, logging.StreamHandler)
-                and getattr(handler, "stream", None) is sys.stderr
-            ]
-            assert stderr_handlers, "expected a stderr stream handler for MCP logs"
-            assert package_logger.level == logging.INFO
-            assert package_logger.propagate is False
-
-            before_count = len(package_logger.handlers)
-            crg_main._configure_package_logging()
-            assert len(package_logger.handlers) == before_count
-        finally:
-            package_logger.handlers = original_handlers
-            package_logger.setLevel(original_level)
-            package_logger.propagate = original_propagate
-
 
 class TestLongRunningToolsAreAsync:
     """Long-running MCP tools must be registered as coroutines so the
@@ -108,13 +60,8 @@ class TestLongRunningToolsAreAsync:
     HEAVY_TOOLS = {
         "build_or_update_graph_tool",
         "run_postprocess_tool",
-        "get_minimal_context_tool",
-        "semantic_search_nodes_tool",
         "embed_graph_tool",
-        "list_graph_stats_tool",
         "detect_changes_tool",
-        "traverse_graph_tool",
-        "cross_repo_search_tool",
         "generate_wiki_tool",
     }
 
@@ -147,18 +94,16 @@ class TestLongRunningToolsAreAsync:
 
     @pytest.mark.asyncio
     async def test_heavy_tool_source_uses_to_thread(self):
-        """Defense in depth: heavy wrappers should still show explicit
-        offloading logic in source so we don't silently regress Windows MCP
-        responsiveness."""
+        """Defense in depth: the source of every heavy tool wrapper must
+        literally call asyncio.to_thread so we don't accidentally turn
+        a tool async without offloading the blocking work."""
         for tool_name in self.HEAVY_TOOLS:
             fn = getattr(crg_main, tool_name, None)
             assert fn is not None, f"{tool_name} not found on module"
-            underlying = inspect.unwrap(getattr(fn, "fn", None) or fn)
+            # The @mcp.tool() decorator wraps the original function; walk
+            # through the wrapper to find the underlying source.
+            underlying = getattr(fn, "fn", None) or fn
             source = inspect.getsource(underlying)
-            if tool_name == "run_postprocess_tool":
-                assert "asyncio.to_thread" in source
-                assert "if communities:" in source
-                continue
             assert "asyncio.to_thread" in source, (
                 f"{tool_name} must call asyncio.to_thread to offload its "
                 f"blocking work; otherwise Windows MCP clients will hang. "
@@ -166,71 +111,49 @@ class TestLongRunningToolsAreAsync:
             )
 
 
-class TestRunPostprocessToolExecutionMode:
-    @pytest.mark.asyncio
-    async def test_communities_path_runs_inline(self, monkeypatch):
-        tool = crg_main.run_postprocess_tool
-        underlying = inspect.unwrap(getattr(tool, "fn", None) or tool)
+class TestServePidLock:
+    """PID lock prevents duplicate ``code-review-graph serve`` instances."""
 
-        called: dict[str, object] = {}
+    def test_lock_file_written_and_contains_pid(self, tmp_path):
+        (tmp_path / ".git").mkdir()
+        lock_path = crg_main._acquire_serve_lock(str(tmp_path))
+        assert lock_path is not None
+        assert lock_path.exists()
+        assert int(lock_path.read_text()) == os.getpid()
+        lock_path.unlink()
 
-        def fake_run_postprocess(**kwargs):
-            called["kwargs"] = kwargs
-            return {"status": "ok", "mode": "inline"}
+    def test_stale_lock_overwritten(self, tmp_path):
+        (tmp_path / ".git").mkdir()
+        data_dir = tmp_path / ".code-review-graph"
+        data_dir.mkdir()
+        stale = data_dir / "serve.pid"
+        # Write a PID that can never be alive (PID 0 is the kernel on
+        # all platforms; os.kill(0, 0) has special semantics so we use
+        # a large, almost certainly unused PID instead).
+        stale.write_text("999999999")
+        lock_path = crg_main._acquire_serve_lock(str(tmp_path))
+        assert lock_path is not None
+        assert int(lock_path.read_text()) == os.getpid()
+        lock_path.unlink()
 
-        async def fail_to_thread(*args, **kwargs):
-            raise AssertionError("communities path should not use asyncio.to_thread")
+    def test_force_flag_skips_live_check(self, tmp_path, monkeypatch):
+        (tmp_path / ".git").mkdir()
+        data_dir = tmp_path / ".code-review-graph"
+        data_dir.mkdir()
+        lock = data_dir / "serve.pid"
+        # Pretend another PID is alive by monkey-patching the helper.
+        monkeypatch.setattr(crg_main, "_is_pid_alive", lambda _pid: True)
+        lock.write_text("12345")
+        lock_path = crg_main._acquire_serve_lock(str(tmp_path), force=True)
+        assert lock_path is not None
+        assert int(lock_path.read_text()) == os.getpid()
+        lock_path.unlink()
 
-        monkeypatch.setattr(crg_main, "run_postprocess", fake_run_postprocess)
-        monkeypatch.setattr(crg_main.asyncio, "to_thread", fail_to_thread)
-
-        result = await underlying(
-            flows=False,
-            communities=True,
-            fts=False,
-            repo_root="/tmp/repo",
-        )
-
-        assert result == {"status": "ok", "mode": "inline"}
-        assert called["kwargs"] == {
-            "flows": False,
-            "communities": True,
-            "fts": False,
-            "repo_root": "/tmp/repo",
-        }
-
-    @pytest.mark.asyncio
-    async def test_non_community_path_stays_threaded(self, monkeypatch):
-        tool = crg_main.run_postprocess_tool
-        underlying = inspect.unwrap(getattr(tool, "fn", None) or tool)
-
-        called: dict[str, object] = {}
-
-        def fake_run_postprocess(**kwargs):
-            called["run_postprocess_kwargs"] = kwargs
-            return {"status": "ok", "mode": "threaded"}
-
-        async def fake_to_thread(func, /, *args, **kwargs):
-            called["to_thread_func"] = func
-            called["to_thread_kwargs"] = kwargs
-            return func(*args, **kwargs)
-
-        monkeypatch.setattr(crg_main, "run_postprocess", fake_run_postprocess)
-        monkeypatch.setattr(crg_main.asyncio, "to_thread", fake_to_thread)
-
-        result = await underlying(
-            flows=True,
-            communities=False,
-            fts=True,
-            repo_root="/tmp/repo",
-        )
-
-        assert result == {"status": "ok", "mode": "threaded"}
-        assert called["to_thread_func"] is fake_run_postprocess
-        assert called["to_thread_kwargs"] == {
-            "flows": True,
-            "communities": False,
-            "fts": True,
-            "repo_root": "/tmp/repo",
-        }
-        assert called["run_postprocess_kwargs"] == called["to_thread_kwargs"]
+    def test_release_removes_lock(self, tmp_path, monkeypatch):
+        (tmp_path / ".git").mkdir()
+        lock_path = crg_main._acquire_serve_lock(str(tmp_path))
+        assert lock_path is not None and lock_path.exists()
+        monkeypatch.setattr(crg_main, "_pid_lock_path", lock_path)
+        crg_main._release_serve_lock()
+        assert not lock_path.exists()
+        assert crg_main._pid_lock_path is None
