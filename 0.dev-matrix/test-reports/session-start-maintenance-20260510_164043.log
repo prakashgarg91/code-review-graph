@@ -1,0 +1,15 @@
+=== Session Start Maintenance ===
+Started: 2026-05-10T16:40:43
+Repo: D:\Github\code-review-graph
+--- code-review-graph update --repo ---
+code-review-graph.exe : INFO: FTS index rebuilt: 2139 rows indexed
+At D:\Github\0.dev-matrix\session-start-maintenance.shared.ps1:85 char:15
++     $output = & $commandPath @arguments 2>&1 | Out-String
++               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO: FTS index...39 rows indexed 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Incremental: 4 files updated, 0 nodes, 0 edges (postprocess=full)
+Finished: 2026-05-10T16:40:44
+Summary: session-start maintenance completed successfully

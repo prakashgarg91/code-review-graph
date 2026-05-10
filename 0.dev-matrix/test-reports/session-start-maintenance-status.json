@@ -1,0 +1,32 @@
+{
+    "State":  "passed",
+    "StartedAt":  "2026-05-10T16:40:43",
+    "FinishedAt":  "2026-05-10T16:40:44",
+    "DurationMinutes":  0.01,
+    "ExitCode":  0,
+    "Pid":  18412,
+    "Log":  "0.dev-matrix/test-reports/session-start-maintenance-20260510_164043.log",
+    "Summary":  "session-start maintenance completed successfully",
+    "Steps":  [
+                  {
+                      "Label":  "code-review-graph update",
+                      "State":  "updated",
+                      "Detail":  "incremental code-review-graph refresh completed"
+                  },
+                  {
+                      "Label":  "graphify status",
+                      "State":  "skipped",
+                      "Detail":  "0.dev-matrix/graphify.ps1 not found"
+                  },
+                  {
+                      "Label":  "graphify refresh",
+                      "State":  "skipped",
+                      "Detail":  "graphify helper not available in this repo"
+                  },
+                  {
+                      "Label":  "graphify hooks status",
+                      "State":  "skipped",
+                      "Detail":  "graphify helper not available in this repo"
+                  }
+              ]
+}
