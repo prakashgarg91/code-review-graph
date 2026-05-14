@@ -43,6 +43,11 @@ code-review-graph-vscode/dist/
 .claude/
 .claude-plugin/
 
+# Personal dev-matrix tooling (injected by install-dev-matrix-project-template.ps1)
+openharness.ps1
+.openharness/
+.github/hooks/delivery-intelligence.json
+
 # Coverage
 htmlcov/
 .coverage
