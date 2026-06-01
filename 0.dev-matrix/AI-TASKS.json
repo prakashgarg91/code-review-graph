@@ -1,0 +1,128 @@
+﻿{
+    "$schema":  "AI Task Queue v2.0",
+    "meta":  {
+                 "purpose":  "Portable bootstrap queue for repos that adopt the shared 0.dev-matrix operating system.",
+                 "generatedOutputs":  [
+                                          "0.dev-matrix/NEXT-2-TASKS.md",
+                                          "2-task.md"
+                                      ],
+                 "notes":  [
+                               "Adapt this queue to the repo before claiming delivery progress.",
+                               "Keep at most two active tasks.",
+                               "Use proof-driven validation on every task."
+                           ]
+             },
+    "policy":  {
+                   "maxActiveTasks":  2,
+                   "promotableStatuses":  [
+                                              "planned",
+                                              "queued",
+                                              "ready"
+                                          ],
+                   "blockedStatuses":  [
+                                           "blocked",
+                                           "parked",
+                                           "human-blocked"
+                                       ],
+                   "terminalStatuses":  [
+                                            "done",
+                                            "completed",
+                                            "cancelled"
+                                        ]
+               },
+    "tasks":  [
+                  {
+                      "id":  "BOOT-001",
+                      "title":  "Adapt the queue to this repo\u0027s real current state",
+                      "status":  "active",
+                      "priority":  "P1",
+                      "phase":  "analyze",
+                      "order":  1,
+                      "ownerFiles":  [
+                                         "0.dev-matrix/AI-HANDOFF.md",
+                                         "0.dev-matrix/STATE.md",
+                                         "0.dev-matrix/TASK.md",
+                                         "0.dev-matrix/LAUNCH_CHECKLIST.md"
+                                     ],
+                      "dependsOn":  [
+
+                                    ],
+                      "why":  "A copied 0.dev-matrix must be translated into repo truth before implementation starts.",
+                      "definitionOfDone":  "AI-TASKS.json, NEXT-2-TASKS.md, TASK.md, STATE.md, and AI-HANDOFF.md all describe the same repo-specific active slice.",
+                      "validation":  [
+                                         "Run 0.dev-matrix/sync-two-task-loop.ps1 -Mode manual.",
+                                         "Confirm the active pair in NEXT-2-TASKS.md matches the repo\u0027s real current priority."
+                                     ],
+                      "businessValue":  "Prevents copied governance files from becoming stale theater instead of an operating system."
+                  },
+                  {
+                      "id":  "BOOT-002",
+                      "title":  "Generate the repo layout index and review orphan-file hints",
+                      "status":  "active",
+                      "priority":  "P1",
+                      "phase":  "validate",
+                      "order":  2,
+                      "ownerFiles":  [
+                                         "0.dev-matrix/repo-layout-index.ps1",
+                                         "graphify-out/repo-layout-index.json",
+                                         "graphify-out/REPO_LAYOUT.md"
+                                     ],
+                      "dependsOn":  [
+
+                                    ],
+                      "why":  "Every repo should expose unlinked docs, orphan docs, and isolated scripts before deeper refactors or launches.",
+                      "definitionOfDone":  "The repo layout index is generated and the resulting orphan-file or isolated-script hints are either accepted, archived, or queued for cleanup.",
+                      "validation":  [
+                                         "Run 0.dev-matrix/repo-layout-index.ps1.",
+                                         "Review graphify-out/repo-layout-index.json gap_hints and turn real issues into queue items or archives."
+                                     ],
+                      "businessValue":  "Keeps the codebase connected and professional instead of accumulating orphaned operational junk."
+                  },
+                  {
+                      "id":  "BOOT-003",
+                      "title":  "Choose the first repo-specific launch or earning slice",
+                      "status":  "planned",
+                      "priority":  "P1",
+                      "phase":  "contract",
+                      "order":  3,
+                      "ownerFiles":  [
+                                         "0.dev-matrix/TASK.md",
+                                         "0.dev-matrix/LAUNCH_CHECKLIST.md",
+                                         "0.dev-matrix/AI-HANDOFF.md"
+                                     ],
+                      "dependsOn":  [
+                                        "BOOT-001",
+                                        "BOOT-002"
+                                    ],
+                      "why":  "The operating system should narrow work into one real revenue, launch, or runtime slice instead of generic productivity motion.",
+                      "definitionOfDone":  "The repo\u0027s next slice is expressed as a falsifiable, proof-driven task with one cheapest validation command.",
+                      "validation":  [
+                                         "The active slice has one explicit validation command.",
+                                         "The launch checklist and handoff agree on that same slice."
+                                     ],
+                      "businessValue":  "Turns the dev-matrix from administration into delivery."
+                  },
+                  {
+                      "id":  "BOOT-004",
+                      "title":  "Implement the first repo-specific validated slice",
+                      "status":  "planned",
+                      "priority":  "P1",
+                      "phase":  "realize",
+                      "order":  4,
+                      "ownerFiles":  [
+
+                                     ],
+                      "dependsOn":  [
+                                        "BOOT-003"
+                                    ],
+                      "why":  "The system exists to ship real working software, not just to define workflow rules.",
+                      "definitionOfDone":  "A code, config, or runtime change lands with passing validation and truthful handoff evidence.",
+                      "validation":  [
+                                         "Run the cheapest slice-level proof command.",
+                                         "Update AI-HANDOFF.md, STATE.md, TASK.md, and AI-TASKS.json with the result."
+                                     ],
+                      "businessValue":  "Converts the operating system into working product progress."
+                  }
+              ]
+}
+

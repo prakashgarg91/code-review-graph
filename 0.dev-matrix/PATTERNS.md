@@ -143,6 +143,57 @@ class BaseStrategy:
 
 ---
 
+## 🧱 SHARED CAPABILITY PATTERNS
+
+### Pattern: Separate Product Repos, Shared Capability Contracts
+```text
+Product repo owns:
+- business rules
+- UI / endpoints
+- product-specific persistence
+- launch and failure isolation
+
+Shared capability owns:
+- generic monitoring / polling
+- RSS parsing
+- dedupe helpers
+- normalized contracts
+- provider fallbacks
+```
+**Canonical home:** `D:\Github\Office_Scripts\Shared-scripts\`
+
+**Rule:** put cross-repo generic building blocks in the shared capability layer, but keep product logic inside each product repo. Repos may consume the same capability without importing each other's business code.
+
+**Why:** This preserves blast-radius isolation while still avoiding repeated plumbing work.
+
+---
+
+### Pattern: Source Watch Capability
+```json
+{
+    "item_id": "source:abc123",
+    "source_type": "rss",
+    "source_url": "https://example.com/feed.xml",
+    "canonical_url": "https://example.com/post",
+    "title": "Example title",
+    "summary": "Short extracted summary",
+    "content_text": "Normalized body text",
+    "published_at": "2026-05-31T10:00:00Z",
+    "detected_at": "2026-05-31T10:05:00Z",
+    "content_hash": "sha256:...",
+    "tags": ["finance", "india"]
+}
+```
+**Use it for:** website monitoring, RSS/feed polling, dedupe, and normalized item output.
+
+**Consumers:** Blogger-MCP, Telegram-MCP, Opportunity Gap finder, and future content or alerting repos.
+
+**Rule:** Source Watch should live as a shared capability under `D:\Github\Office_Scripts\Shared-scripts\` or be promoted to a small shared service when runtime/state requirements outgrow a folder-only implementation.
+
+**Why:** One normalized upstream contract lets separate repos reuse the same source intelligence without becoming coupled to each other's app code.
+
+---
+
 ## 📊 STATE MANAGEMENT PATTERNS
 
 ### Pattern: Single Authoritative State Store
@@ -192,7 +243,7 @@ return amount * 0.05   // BUG-020 pattern
 ### Pattern: Code-Review-Graph First Call
 ```
 # Before any non-trivial edit:
-get_minimal_context(task="<description>")   # ~100 tokens, full picture
+code-review-graph_get_minimal_context_tool(repo_root="D:/Github/<repo>", task="<description>")   # ~100 tokens, full picture
 ```
 **Why:** Prevents editing code without knowing its call graph and blast radius.
 
@@ -201,7 +252,7 @@ get_minimal_context(task="<description>")   # ~100 tokens, full picture
 ### Pattern: Roo Bridge And Graphify Before Grep
 ```
 # For intent/behaviour queries:
-search_roo_index(query="payment webhook processing", scope="code")
+roo-code-index-bridge_roo-code-index-search(query="payment webhook processing", workspace_path="D:/Github/<repo>")
 
 # For architecture and gap questions after semantic narrowing:
 read graphify-out/GRAPH_REPORT.md

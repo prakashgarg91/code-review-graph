@@ -1,0 +1,1127 @@
+{
+  "D:\\Github\\code-review-graph\\.mcp.json": {
+    "mtime": 1776342478.1336539,
+    "ast_hash": "d58de6f4bae79c84253c919e41a7b32d",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\.github\\hooks\\watch-session.json": {
+    "mtime": 1780081975.3743343,
+    "ast_hash": "cb53b05275f8faf0c5fc61324ee4f874",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\AI-TASKS.json": {
+    "mtime": 1780083664.2247815,
+    "ast_hash": "7141a01296097cdd3cdfc461dd00b97f",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\close-day.ps1": {
+    "mtime": 1778411406.082476,
+    "ast_hash": "5dd236d56824b2faeaa3a4b2dd1cc83b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\graphify.ps1": {
+    "mtime": 1778947112.335414,
+    "ast_hash": "8f547b4a9e703ea12d23132e7b5173e4",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\index-of-code.overrides.json": {
+    "mtime": 1780072793.990074,
+    "ast_hash": "8df6e1196fd87e10249cf336d2ce47b8",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\project-progress.ps1": {
+    "mtime": 1780083664.2019808,
+    "ast_hash": "add9b2efe88c90e8d7df62344cc9c78a",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\repo-layout-index.ps1": {
+    "mtime": 1780083664.2019808,
+    "ast_hash": "04478316ff1928a81ad0ef7222d31dbe",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\resume-work.ps1": {
+    "mtime": 1780083664.2019808,
+    "ast_hash": "e7651c1f352090235a9669640a7d82f5",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\session-start-maintenance.ps1": {
+    "mtime": 1780083664.2019808,
+    "ast_hash": "722a8266de5bffb8f1f1f06e28a7cc6b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\sync-two-task-loop.ps1": {
+    "mtime": 1780083664.2019808,
+    "ast_hash": "4aee4a60385dbf3f6bf4c43f4d369062",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\test-reports\\session-start-maintenance-status.json": {
+    "mtime": 1778411444.2135086,
+    "ast_hash": "c589ad0ccce58aec2dfe5454b6961d01",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\esbuild.mjs": {
+    "mtime": 1775989854.831143,
+    "ast_hash": "21c40734160aee7fb51858dd3b91df7b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\package.json": {
+    "mtime": 1775989854.8332546,
+    "ast_hash": "4f65752021f6631c549f617691a64ab2",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\tsconfig.json": {
+    "mtime": 1775989854.8360362,
+    "ast_hash": "fef2f81b8cca9a1d880b19319e5f6101",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\extension.ts": {
+    "mtime": 1775989854.8344724,
+    "ast_hash": "52168473525dcef0e1ffaa88cec1fbb1",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\backend\\cli.ts": {
+    "mtime": 1775989854.8332546,
+    "ast_hash": "5d7df3cb120066b2bc5b29c44506f2ec",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\backend\\sqlite.ts": {
+    "mtime": 1776267537.4731207,
+    "ast_hash": "427d5486cfdd47339caf302f331f544a",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\backend\\watcher.ts": {
+    "mtime": 1775989854.8332546,
+    "ast_hash": "35a0cc69a28f92e53d5903a392150173",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\features\\blastRadius.ts": {
+    "mtime": 1775989854.8344724,
+    "ast_hash": "fde7d9b94ade146f7cfdbaa096642c37",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\features\\cursorResolver.ts": {
+    "mtime": 1775989854.8344724,
+    "ast_hash": "125017cfeb96690467fca81cd12957b7",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\features\\navigation.ts": {
+    "mtime": 1775989854.8344724,
+    "ast_hash": "b2fba4fb202431d177e0d6cb7f965f5d",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\features\\reviewAssistant.ts": {
+    "mtime": 1775989854.8344724,
+    "ast_hash": "94ba3e7fa33d2edd3d1a4c30bd34dafe",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\features\\scmDecorations.ts": {
+    "mtime": 1775989854.8344724,
+    "ast_hash": "3bafc4a6f8c33f06c9236783df1b9683",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\features\\search.ts": {
+    "mtime": 1775989854.8344724,
+    "ast_hash": "4a53dce64e63ed06e531cb799184c0c4",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\onboarding\\installer.ts": {
+    "mtime": 1775989854.8344724,
+    "ast_hash": "5edfb23ed58e64208b392001f6e1bfba",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\onboarding\\welcome.ts": {
+    "mtime": 1775989854.8360362,
+    "ast_hash": "889af57db69bc9bc9a32f635496c2b79",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\views\\graphWebview.ts": {
+    "mtime": 1775989854.8360362,
+    "ast_hash": "0434cd9de47f20fa3c1e2b936ceec63b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\views\\statusBar.ts": {
+    "mtime": 1775989854.8360362,
+    "ast_hash": "1575bf851dd153d7178e2bb6d5def843",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\views\\treeItems.ts": {
+    "mtime": 1775989854.8360362,
+    "ast_hash": "2ed8acdcd1ef90459516195fc78f1fa1",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\views\\treeView.ts": {
+    "mtime": 1775989854.8360362,
+    "ast_hash": "df7303e2e6e7990ad16f09ca5fccb9f9",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\src\\webview\\graph.ts": {
+    "mtime": 1775989854.8360362,
+    "ast_hash": "59de36d687be466e8e04015801890a5e",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\test\\sqlite.test.ts": {
+    "mtime": 1775989854.8360362,
+    "ast_hash": "60c83b8a70234c834cb15ae464340771",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\analysis.py": {
+    "mtime": 1776267537.474126,
+    "ast_hash": "11195c4879d29b3937c392cb93b0ddfa",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\changes.py": {
+    "mtime": 1776333715.619997,
+    "ast_hash": "e1e5c304c3c32071ba916134adc3d883",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\cli.py": {
+    "mtime": 1776438505.3842785,
+    "ast_hash": "416e92df2afa54937f1d32ae3dd8c77a",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\communities.py": {
+    "mtime": 1776343087.472056,
+    "ast_hash": "994e80f882f7372aad36da96aba30820",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\constants.py": {
+    "mtime": 1775989854.8384168,
+    "ast_hash": "408ba3d1554ec29be72bbc4b9ed21e4d",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\embeddings.py": {
+    "mtime": 1776338737.5649314,
+    "ast_hash": "ece464d14cbe6267a000afe5885554f7",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\exports.py": {
+    "mtime": 1776267537.4761422,
+    "ast_hash": "519d60e666c69680d740e40543e67f08",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\flows.py": {
+    "mtime": 1776267537.4761422,
+    "ast_hash": "1d9ea5530983967e8de8e87455486730",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\graph.py": {
+    "mtime": 1776333715.619997,
+    "ast_hash": "2f549c73cca2b146d49d0378ff6331a9",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\graph_diff.py": {
+    "mtime": 1776267537.4778297,
+    "ast_hash": "2a22bf79de4c2873939308594a4f1eec",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\hints.py": {
+    "mtime": 1775989854.8419883,
+    "ast_hash": "857fdc828f0743e9ec02c5590434a0a8",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\incremental.py": {
+    "mtime": 1776334011.5243962,
+    "ast_hash": "6c40a31b9b92b5fbfe79a0d080a18eb5",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\main.py": {
+    "mtime": 1776438517.1551328,
+    "ast_hash": "5f25a4c6139c35b7b5f0ff5b991caf47",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\memory.py": {
+    "mtime": 1776267537.478832,
+    "ast_hash": "db23bbc947de4e5f7abf242c72914a23",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\migrations.py": {
+    "mtime": 1776267537.478832,
+    "ast_hash": "86cccc173cd60cf3b0e6a78ff0bb4438",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\parser.py": {
+    "mtime": 1776267537.479334,
+    "ast_hash": "c1c9030c4232023d6d9fcf77ae06e0f7",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\prompts.py": {
+    "mtime": 1775989854.8419883,
+    "ast_hash": "99a2c5228ace731ab9b12a037c53c2db",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\refactor.py": {
+    "mtime": 1776267537.4803364,
+    "ast_hash": "662911577e9c350e8fe2fcc566e38a6c",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\registry.py": {
+    "mtime": 1775989854.843549,
+    "ast_hash": "a8c25c5e6a4420cb9e428cbbaf3da81c",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\search.py": {
+    "mtime": 1776336431.489933,
+    "ast_hash": "37dd148de6d64c4a30550e4638dad88b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\skills.py": {
+    "mtime": 1776267537.4803364,
+    "ast_hash": "2bfc9b1320b75b1c306a9bb88f2829c3",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tsconfig_resolver.py": {
+    "mtime": 1775989854.844923,
+    "ast_hash": "39648b5e7d7ccf7355c9e18f01ea3722",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\visualization.py": {
+    "mtime": 1776267537.4836545,
+    "ast_hash": "d866131cc8254adc05cd7dc21c52cd71",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\wiki.py": {
+    "mtime": 1775989854.8465335,
+    "ast_hash": "bd71464235c127e251b491fd553bf546",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\__init__.py": {
+    "mtime": 1775989854.8360362,
+    "ast_hash": "cb5450c4a7122b7d303c407db13ae2f4",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\__main__.py": {
+    "mtime": 1775989854.8376694,
+    "ast_hash": "4cd6d33defbd8a9248f4697d00cf811b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\reporter.py": {
+    "mtime": 1775989854.8404236,
+    "ast_hash": "24a05114fc4b7aa2e1d0b2b6799df598",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\runner.py": {
+    "mtime": 1775989854.8404236,
+    "ast_hash": "246fdf98f6a2157b7ab79dd47d1969c0",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\scorer.py": {
+    "mtime": 1775989854.8404236,
+    "ast_hash": "983cfba2680a30ba478c1a69c2982244",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\__init__.py": {
+    "mtime": 1775989854.8388665,
+    "ast_hash": "5f1b6821db88a9cbe6db9a21f0beb219",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\benchmarks\\build_performance.py": {
+    "mtime": 1775989854.8388665,
+    "ast_hash": "a9202f14043c1887805f7bab39822ee5",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\benchmarks\\flow_completeness.py": {
+    "mtime": 1775989854.8388665,
+    "ast_hash": "0fead273e937a7a58dba3081cf690314",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\benchmarks\\impact_accuracy.py": {
+    "mtime": 1775989854.8388665,
+    "ast_hash": "20e13067ba67dc67e4ac7480eb8ec95b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\benchmarks\\search_quality.py": {
+    "mtime": 1775989854.8388665,
+    "ast_hash": "873d6d92f56bbfa016df82bf23ac6ef2",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\benchmarks\\__init__.py": {
+    "mtime": 1775989854.8388665,
+    "ast_hash": "0038d5da5f1517946ff1544def82ce43",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\analysis_tools.py": {
+    "mtime": 1776267537.4808385,
+    "ast_hash": "24bca2712c3024100700790ee7e86979",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\build.py": {
+    "mtime": 1776267537.4808385,
+    "ast_hash": "44a2f674bb1de496230bdd8a470714d2",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\community_tools.py": {
+    "mtime": 1775989854.844923,
+    "ast_hash": "be0f0f6167077f6106fc2b5d40cd1493",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\context.py": {
+    "mtime": 1776333715.6137147,
+    "ast_hash": "2b628b1cd8ec7ba12a1333887a3c30f2",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\docs.py": {
+    "mtime": 1776338883.8579054,
+    "ast_hash": "aa8d432cf7bacc4a80c27daf866f0764",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\flows_tools.py": {
+    "mtime": 1775989854.844923,
+    "ast_hash": "1ec55c6321c22197db03033caff5c67a",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\query.py": {
+    "mtime": 1776267537.4823425,
+    "ast_hash": "15db66926753c8aa4ef5e5880ecf88bf",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\refactor_tools.py": {
+    "mtime": 1775989854.844923,
+    "ast_hash": "7f502cc76a6c32cff9a5fa0f44ba5363",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\registry_tools.py": {
+    "mtime": 1775989854.844923,
+    "ast_hash": "c45f9a1c3c53883202c1981cbf5b54df",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\review.py": {
+    "mtime": 1776333715.6152623,
+    "ast_hash": "5e7f5e948b78264f2e689c69066b6eb5",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\_common.py": {
+    "mtime": 1775989854.844476,
+    "ast_hash": "20721d8382590b9761cf77e2b9c76110",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\tools\\__init__.py": {
+    "mtime": 1776267537.4808385,
+    "ast_hash": "e3dc53589e1ccb9a273091f1b6dd19b8",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\diagrams\\generate_diagrams.py": {
+    "mtime": 1776267537.485459,
+    "ast_hash": "91929a52704f78c01391923d93858c9b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\hooks\\hooks.json": {
+    "mtime": 1776267537.485459,
+    "ast_hash": "4db2ef42de2f936ef6474221b6e6f213",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\hooks\\session-start.sh": {
+    "mtime": 1775989854.869125,
+    "ast_hash": "7bb53d463d992c64332279ab53ebf09d",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_changes.py": {
+    "mtime": 1776333715.619997,
+    "ast_hash": "967dd3a2b095d4842fd7524e1fbf187f",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_cli.py": {
+    "mtime": 1775989854.8751366,
+    "ast_hash": "434575d921a8188ef07efa53f5210de0",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_communities.py": {
+    "mtime": 1776343087.472056,
+    "ast_hash": "dd8a326fbccacc57115ddfd61484a6ca",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_embeddings.py": {
+    "mtime": 1776338827.4009821,
+    "ast_hash": "53fb04673b978a52fa29e149dc684a89",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_eval.py": {
+    "mtime": 1775989854.8751366,
+    "ast_hash": "63754d3ad4ba090541aa9147a337aaa3",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_flows.py": {
+    "mtime": 1776267537.487456,
+    "ast_hash": "805c71777fc35ae0b4f79a11a41f044e",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_graph.py": {
+    "mtime": 1775989854.8751366,
+    "ast_hash": "e893f75840ad82f225db71da7a1baf83",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_hints.py": {
+    "mtime": 1775989854.8751366,
+    "ast_hash": "39ce9f52e9b90376cc2a67cee92339d2",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_incremental.py": {
+    "mtime": 1776333715.619997,
+    "ast_hash": "52312160b7f994ca90ddfa4e0599ec15",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_integration_git.py": {
+    "mtime": 1775989854.8767107,
+    "ast_hash": "5f91f532d820e4e95542d2fb3cfc2189",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_integration_v2.py": {
+    "mtime": 1775989854.8767107,
+    "ast_hash": "c0b3deba63846aa77fb7e4a097d86fe3",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_main.py": {
+    "mtime": 1776438517.077117,
+    "ast_hash": "f30ab1ad7ea5d5765c79c563e63b2844",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_migrations.py": {
+    "mtime": 1776267537.487974,
+    "ast_hash": "cbac7c1342db369064fbdbdd1e33eb4a",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_multilang.py": {
+    "mtime": 1776267537.487974,
+    "ast_hash": "c91c7f518fdf758d2fcdcca78b242992",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_notebook.py": {
+    "mtime": 1775989854.8767107,
+    "ast_hash": "78077b731bb5b9bd566e8e1b491622cc",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_parser.py": {
+    "mtime": 1775989854.8767107,
+    "ast_hash": "fcc1724e01f7a12e1c11e8dcb2d4cda6",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_prompts.py": {
+    "mtime": 1775989854.8767107,
+    "ast_hash": "027f96d87355e1a2a2a9db478436d6e0",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_refactor.py": {
+    "mtime": 1776267537.4886062,
+    "ast_hash": "44bff13ab348f70645fa63ac38fba736",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_registry.py": {
+    "mtime": 1775989854.878274,
+    "ast_hash": "a3876329840b350fd1f9c946377277c0",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_search.py": {
+    "mtime": 1776336352.3128078,
+    "ast_hash": "d9c0a577a849cfa5dae7e0ccefb9d30c",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_skills.py": {
+    "mtime": 1776267537.4891279,
+    "ast_hash": "6e0a445d86a4d730a5ffc99baeff9178",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_tools.py": {
+    "mtime": 1776333715.619997,
+    "ast_hash": "3bdf6ff1ff625b8d0c1858ab8839bf1e",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_tsconfig_resolver.py": {
+    "mtime": 1775989854.878274,
+    "ast_hash": "bb316001beb75c628a4491a386a3b447",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_visualization.py": {
+    "mtime": 1775989854.878274,
+    "ast_hash": "2c3d01eea4579134eb5baa20f8090cdd",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\test_wiki.py": {
+    "mtime": 1775989854.878274,
+    "ast_hash": "27ef3e8db139518dbacf7204b1fe257c",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\__init__.py": {
+    "mtime": 1775989854.869125,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\alias_importer.ts": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "cd6f3e95f93f5fc5731aa3d57ca17e14",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\caller_example.py": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "b7f975034a8c2f75125c69c4b52d2756",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\MarkdownMsg.tsx": {
+    "mtime": 1775989854.869125,
+    "ast_hash": "b29f4d61914bc1634f80b09fa20ba774",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\multi_call_example.py": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "df2ba1dae669f886ec3724aadca69a34",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.c": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "df8c946f1df02e54c63aaa021933a669",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.cpp": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "2991a7553604c7e03f74f6f287be1faa",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\Sample.cs": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "1da922c28fdd1f80fb10f5528e411367",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.dart": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "1aee76d16d77f41bb88c7410538d5c55",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.ex": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "8bca4ef34a1b27069c51c543644731dd",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.kt": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "0cf6a14fc70461d3da8ede5a6b111c5f",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.lua": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "8ebdd4bfe4da9af47c1d058452bdd07a",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.luau": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "a06c5ac88c7be47b0b4bed9314c8f488",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.m": {
+    "mtime": 1775989854.8722603,
+    "ast_hash": "19656d43f43b2af3eb40bd3f354b7d70",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.php": {
+    "mtime": 1775989854.8722603,
+    "ast_hash": "6b6086085ba8812e09f217b78343fc04",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.R": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "ce1dabf77a94c4bf0518f28633562613",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.rb": {
+    "mtime": 1775989854.8722603,
+    "ast_hash": "8e7d7acb8840dbd334bf6bc61df0b533",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.scala": {
+    "mtime": 1775989854.8722603,
+    "ast_hash": "cc0d66baa85e125268e6e061c506cfc6",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.sh": {
+    "mtime": 1775989854.8722603,
+    "ast_hash": "3604125739ea94cf068c57f13f28b5cc",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample.swift": {
+    "mtime": 1776267537.4864066,
+    "ast_hash": "170e25d699e24b719a1fd1a1382b0ef9",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\SampleJava.java": {
+    "mtime": 1775989854.8706975,
+    "ast_hash": "6880a87cd5e7a3d1909be77c6fd6dc67",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample_databricks_export.py": {
+    "mtime": 1775989854.8722603,
+    "ast_hash": "96debdbfd37439a688166ba2a95b6a7d",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample_go.go": {
+    "mtime": 1775989854.8722603,
+    "ast_hash": "3d463b27211c3a93238ead9f3b2eeef1",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample_lib.sh": {
+    "mtime": 1775989854.8722603,
+    "ast_hash": "538d709a225303890e187ae5d4601ca8",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample_map_dispatch.py": {
+    "mtime": 1775989854.8722603,
+    "ast_hash": "b0b91e550f3be09ddcb5b535c1524138",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample_map_dispatch.ts": {
+    "mtime": 1775989854.8737688,
+    "ast_hash": "41fdc775f11d4344e656ea7d0d0ac4ec",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample_python.py": {
+    "mtime": 1775989854.8737688,
+    "ast_hash": "750427d0b10ad652676327c62ba71bc1",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample_rust.rs": {
+    "mtime": 1775989854.8737688,
+    "ast_hash": "172a1bfbd2501e2b417fb341073b3510",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample_typescript.ts": {
+    "mtime": 1775989854.8737688,
+    "ast_hash": "20550ff6af81bb539c75f4671a4c35ff",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample_vitest.test.ts": {
+    "mtime": 1775989854.8737688,
+    "ast_hash": "507af43d41ccdf262f3613a7b748d89b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\sample_vue.vue": {
+    "mtime": 1775989854.8737688,
+    "ast_hash": "1a13c55d43fbdca7234bd90ee7c835f3",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\test_sample.py": {
+    "mtime": 1775989854.8747475,
+    "ast_hash": "0fb172138893d36786612eb66fec14c9",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\test_sample.R": {
+    "mtime": 1775989854.8747475,
+    "ast_hash": "29d7946514659aaa26dbdf0c9ff36f5f",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\tsconfig.json": {
+    "mtime": 1775989854.8747475,
+    "ast_hash": "6163b8a72f1e91137915462e8dc49907",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\tests\\fixtures\\src\\lib\\utils.ts": {
+    "mtime": 1775989854.8737688,
+    "ast_hash": "c9b63ac0efd6a2c6a108f385c8ead47b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\2-task.md": {
+    "mtime": 1780083664.230279,
+    "ast_hash": "59399c058aa689cef5aaf37856da9bc3",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\CHANGELOG.md": {
+    "mtime": 1776267537.4715831,
+    "ast_hash": "18b061153a1cad5a8e2ebe37043c2067",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\CLAUDE.md": {
+    "mtime": 1775989854.829543,
+    "ast_hash": "e89f7fda3884b6ac827f50d4b760d345",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\CODE_OF_CONDUCT.md": {
+    "mtime": 1775989854.829543,
+    "ast_hash": "617c5ee75418c1e4e6e064f9a0e379d6",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\CONTRIBUTING.md": {
+    "mtime": 1775989854.829543,
+    "ast_hash": "feeced76beee5a6ac3d3b55fa5de5f03",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\README.hi-IN.md": {
+    "mtime": 1776267537.4720984,
+    "ast_hash": "9b7ce82eada5bf44d7f63c255e65fc4d",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\README.ja-JP.md": {
+    "mtime": 1776267537.4720984,
+    "ast_hash": "012f94a85a3d2dcc665ea33ebb2ea95b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\README.ko-KR.md": {
+    "mtime": 1776267537.4726071,
+    "ast_hash": "ca59ba75b9a77d1f2b6b20c243dab48d",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\README.md": {
+    "mtime": 1776267537.4731207,
+    "ast_hash": "8657f9415e08e746c852d1d63898a797",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\README.zh-CN.md": {
+    "mtime": 1776267537.4731207,
+    "ast_hash": "fa985f95178b7ede0d9e2e1f9a44e62e",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\SECURITY.md": {
+    "mtime": 1775989854.831143,
+    "ast_hash": "f9fe1dd4b6959b2b2aa7c0c90627a034",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\.github\\copilot-instructions.md": {
+    "mtime": 1780080334.3471992,
+    "ast_hash": "87355a63f2fd759f2de5075339c0c0b1",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\.github\\workflows\\ci.yml": {
+    "mtime": 1775989854.8279815,
+    "ast_hash": "eb388642ff6f8719db8fe59be7c25d3a",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\.github\\workflows\\publish.yml": {
+    "mtime": 1775989854.8279815,
+    "ast_hash": "f442e7cadfbd37b97666e4df992cd601",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\AGENT-WORKFLOW.md": {
+    "mtime": 1780079904.2068644,
+    "ast_hash": "36996efe7b8ead3b0f57f867c146d420",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\AGENTS.md": {
+    "mtime": 1780079780.9488685,
+    "ast_hash": "d423aedfc7a6142f6c8e17be74e16053",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\AI-HANDOFF.md": {
+    "mtime": 1778413465.9804726,
+    "ast_hash": "3d388c27cc357bb43bcdd36a67e285dc",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\CLOSING-DAY-HOOK.md": {
+    "mtime": 1778411406.082476,
+    "ast_hash": "112d94d8fb2f6a67720dc49398cd2afc",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\CODE-REVIEW-GRAPH.md": {
+    "mtime": 1778510063.1709666,
+    "ast_hash": "d15eba2c837d8d4785ed3404ed092420",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\CONTEXT-ENGINEERING.md": {
+    "mtime": 1776328886.4978316,
+    "ast_hash": "45dbba7fbf878620751dd0fa317cdb8e",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\DELIVERY-INTELLIGENCE.md": {
+    "mtime": 1778418552.2061038,
+    "ast_hash": "22436ed457327d22318dcd9ae434fdc6",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\DISCUSSION.md": {
+    "mtime": 1778411406.0844743,
+    "ast_hash": "62db0fa4f857dd2b8046d4c65b419f89",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\ECOSYSTEM.md": {
+    "mtime": 1776350935.8600304,
+    "ast_hash": "ea2d4fa19b8e552d1a0ac91aa2f6b4cd",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\END-DAY.md": {
+    "mtime": 1780079904.208512,
+    "ast_hash": "bfdefade59da2bc1493da1ca2b116968",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\GRAPHIFY.md": {
+    "mtime": 1778251221.6462998,
+    "ast_hash": "01cc6647f86da81c455f9480b9949b72",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\INDEX-OF-CODE.md": {
+    "mtime": 1780072793.9933462,
+    "ast_hash": "076a26f1d4e0e5001b2ba17dff929bc9",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\INDEX.md": {
+    "mtime": 1780079780.95225,
+    "ast_hash": "f119ae89395f08d5ceb43442fbbbbcd7",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\JUNIE.md": {
+    "mtime": 1778418552.2114675,
+    "ast_hash": "7c6a1f4fde1752939ef0b2756279df49",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\LAST-CLOSEOUT.md": {
+    "mtime": 1778411445.8338234,
+    "ast_hash": "85280dcf8d76c41e98875ac703873ae9",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\LAUNCH_CHECKLIST.md": {
+    "mtime": 1778411406.0844743,
+    "ast_hash": "bf371d3e63c5a786dd8315374cc16df8",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\NEXT-2-TASKS.md": {
+    "mtime": 1780083664.2268734,
+    "ast_hash": "77310d38b73c4d15dac9c31e17082c32",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\OPENHARNESS.md": {
+    "mtime": 1778510063.1709666,
+    "ast_hash": "7770b59bd313cd517bbcb14471aaee7f",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\PATTERNS.md": {
+    "mtime": 1776350935.8600304,
+    "ast_hash": "9ae8892f0059761c020f82e33e0acb2c",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\QUALITY-BASELINE.md": {
+    "mtime": 1776003679.0147376,
+    "ast_hash": "7d08430e5b34d7955cc2b99458cdc6f4",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\REAL-WORLD-EARNING-PROMPT.md": {
+    "mtime": 1778769948.6251152,
+    "ast_hash": "9abb0b4f08fd3b4c4f80edd07c1705dd",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\REPO-LAYOUT-INDEX.md": {
+    "mtime": 1778769948.6245906,
+    "ast_hash": "74e563a85666d8ce815ae3c4ada7e7e9",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\ROO-INDEX-BRIDGE.md": {
+    "mtime": 1778510063.1709666,
+    "ast_hash": "c1ea5d90ab60b1ea2b50d6aab6ac9e65",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\RULES.md": {
+    "mtime": 1780079904.19639,
+    "ast_hash": "52f90ab6b3618ee32b45e2e4296d873c",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\SECURITY.md": {
+    "mtime": 1776003610.9647236,
+    "ast_hash": "f7d742e555fafb80707f2d2488a63ff8",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\START-DAY.md": {
+    "mtime": 1780079904.208512,
+    "ast_hash": "f95f5c90572653a984e338d731a82855",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\STATE.md": {
+    "mtime": 1778411406.0834746,
+    "ast_hash": "d69845b064489e8419a3f4410a98804f",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\TASK.md": {
+    "mtime": 1778413465.9799566,
+    "ast_hash": "dbd9a69b4f321ee7f5db5ea46f7d4980",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\TESTING_PRINCIPLES.md": {
+    "mtime": 1780079904.2025363,
+    "ast_hash": "9ef90d53b4b65b0e2fb9810569c24540",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\TREE-HYGIENE.md": {
+    "mtime": 1776003767.3346136,
+    "ast_hash": "5aa4f6371bbdf1addbdb868a8f600e99",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\WATCH.md": {
+    "mtime": 1780079437.5375526,
+    "ast_hash": "85b56bfd6a69b0761042038ac97ed375",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\closeout-logs\\closeout-20260510_164045.md": {
+    "mtime": 1778411445.8338234,
+    "ast_hash": "85280dcf8d76c41e98875ac703873ae9",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\0.dev-matrix\\standards\\CODE-INDEX-STANDARD.md": {
+    "mtime": 1780072793.9851656,
+    "ast_hash": "a94484dfe33437d7e3ce4502318bb667",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\CHANGELOG.md": {
+    "mtime": 1775989854.831143,
+    "ast_hash": "a8d4303d487c75ac89a1d9f3a193a4d5",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\README.md": {
+    "mtime": 1775989854.831143,
+    "ast_hash": "2dd6e7435611a238adb1bf8823671e1b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\media\\walkthrough\\build.md": {
+    "mtime": 1775989854.831143,
+    "ast_hash": "fb129df08cf63d42d1d8feac08e51555",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\media\\walkthrough\\explore.md": {
+    "mtime": 1775989854.8327353,
+    "ast_hash": "e2eb245d52df7156fea7840c1da30e58",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\media\\walkthrough\\install.md": {
+    "mtime": 1775989854.8327353,
+    "ast_hash": "635290c68c8577b872119b4fe4889e63",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\configs\\express.yaml": {
+    "mtime": 1775989854.8388665,
+    "ast_hash": "75ba4cc5c2219409111d017a5d20ecaf",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\configs\\fastapi.yaml": {
+    "mtime": 1775989854.8388665,
+    "ast_hash": "01efbbbd0abff7e286b473d09160121e",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\configs\\flask.yaml": {
+    "mtime": 1775989854.8388665,
+    "ast_hash": "d75cee9650577acb03697cd16fa0936b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\configs\\gin.yaml": {
+    "mtime": 1775989854.8388665,
+    "ast_hash": "8d8c28616bc06fa09952e361f76b6906",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\configs\\httpx.yaml": {
+    "mtime": 1775989854.8404236,
+    "ast_hash": "bf7f84ac24c7b33c0731bea440221b23",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code_review_graph\\eval\\configs\\nextjs.yaml": {
+    "mtime": 1775989854.8404236,
+    "ast_hash": "2761906ffbb9c0ac9a49a36d0550d337",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\docs\\architecture.md": {
+    "mtime": 1775989854.8686929,
+    "ast_hash": "26c24a7695c5a9689cd212d6f3e82fec",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\docs\\COMMANDS.md": {
+    "mtime": 1775989854.867696,
+    "ast_hash": "9277c04649a10b8a8af2b4723cca1ed6",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\docs\\FEATURES.md": {
+    "mtime": 1775989854.867696,
+    "ast_hash": "74f571f005881557fd58783f15fd044e",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\docs\\INDEX.md": {
+    "mtime": 1775989854.867696,
+    "ast_hash": "869c08cc5029c519fe59f2d20ad40022",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\docs\\LEGAL.md": {
+    "mtime": 1775989854.867696,
+    "ast_hash": "f7be830850267b1f709e82a79579d340",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\docs\\LLM-OPTIMIZED-REFERENCE.md": {
+    "mtime": 1775989854.867696,
+    "ast_hash": "2ede493e18acf250e26998a867b06308",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\docs\\ROADMAP.md": {
+    "mtime": 1775989854.867696,
+    "ast_hash": "8c2227788ac619eafcfff0fc04b4571e",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\docs\\schema.md": {
+    "mtime": 1775989854.869125,
+    "ast_hash": "bc312a7b53ee4741a607d03ffc1dd2f8",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\docs\\TROUBLESHOOTING.md": {
+    "mtime": 1775989854.867696,
+    "ast_hash": "750adff4529d43c50118819611305a71",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\docs\\USAGE.md": {
+    "mtime": 1775989854.8686929,
+    "ast_hash": "bc24cc5f8ab1a23fadcc2252fda9f759",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\skills\\build-graph\\SKILL.md": {
+    "mtime": 1775989854.869125,
+    "ast_hash": "716239624ab5f033373c7573b9a1eb51",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\skills\\review-delta\\SKILL.md": {
+    "mtime": 1775989854.869125,
+    "ast_hash": "4d4d73d3da7a4229c57ab0988a354570",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\skills\\review-pr\\SKILL.md": {
+    "mtime": 1775989854.869125,
+    "ast_hash": "5f22d1923f0a03be92a50423ac1c90a0",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\media\\icons\\graph.svg": {
+    "mtime": 1775989854.831143,
+    "ast_hash": "266f9c9fa63665ecb1cd8fbdfaf01386",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\code-review-graph-vscode\\media\\icons\\icon.png": {
+    "mtime": 1775989854.831143,
+    "ast_hash": "4d06b244be5a5f38cb004d054b7361d0",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\diagrams\\diagram1_before_vs_after.png": {
+    "mtime": 1775989854.8496566,
+    "ast_hash": "fcedf5d302dd61d7c065988c6814c0d4",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\diagrams\\diagram2_architecture_pipeline.png": {
+    "mtime": 1775989854.8509524,
+    "ast_hash": "13484d0a450e79a8fcddc1eb1c866ca7",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\diagrams\\diagram3_blast_radius.png": {
+    "mtime": 1775989854.8525236,
+    "ast_hash": "e7ccd6fc6d5de295b5f6509619f85441",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\diagrams\\diagram4_incremental_update.png": {
+    "mtime": 1775989854.855647,
+    "ast_hash": "2adcc5c32ed464e1ad83d373cc0cf08f",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\diagrams\\diagram5_benchmark_board.png": {
+    "mtime": 1775989854.8585749,
+    "ast_hash": "ab7aafad0c958da857372e6a93de5a3b",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\diagrams\\diagram6_monorepo_funnel.png": {
+    "mtime": 1775989854.8601334,
+    "ast_hash": "f6e32dc7795b3cc5ed3add5105241003",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\diagrams\\diagram7_mcp_integration_flow.png": {
+    "mtime": 1775989854.8630326,
+    "ast_hash": "06e2ad1ae8aef6a233f7a4ed083303f5",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\diagrams\\diagram8_supported_platforms.png": {
+    "mtime": 1776267537.485459,
+    "ast_hash": "c0d5857dfb1a30661e9443d2700ee270",
+    "semantic_hash": ""
+  },
+  "D:\\Github\\code-review-graph\\diagrams\\diagram9_language_coverage.png": {
+    "mtime": 1775989854.8661377,
+    "ast_hash": "6e701a45b14e9d242f7f56f9b5f8b823",
+    "semantic_hash": ""
+  }
+}
